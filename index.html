@@ -5670,7 +5670,7 @@ function renderCFForm(){
           value="${esc(f.name)}"
           oninput="_cfFormFields[${i}].name=this.value"/>
         <button type="button" class="cf-form-type" onclick="_cfFormFields[${i}].type=_cfFormFields[${i}].type==='password'?'text':'password';renderCFForm()" title="Toggle type">
-          ${f.type==='password'?'🔒 '+t('cf.typePassword'):'T  '+t('cf.typeText')}
+          ${f.type==='password'?t('cf.typePassword'):t('cf.typeText')}
         </button>
         <button class="cf-item-remove" onclick="_cfFormFields.splice(${i},1);renderCFForm()" title="${t('cf.removeField')}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
