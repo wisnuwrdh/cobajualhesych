@@ -6466,7 +6466,8 @@ function getLicensePayload(){
   try{
     const raw = localStorage.getItem(_LICENSE_KEY);
     if(!raw) return null;
-    return JSON.parse(atob(raw.split('.')[1]));
+    // Gumroad license keys are plain strings, not JWTs
+    return { key: raw };
   }catch(e){ return null; }
 }
 
@@ -6535,7 +6536,7 @@ function renderLicenseSheet(){
   const payload = getLicensePayload();
   const activatedAt = localStorage.getItem(_LICENSE_KEY + '_at');
 
-  if(premium && payload){
+  if(premium){
     title.textContent = t('premium.activeTitle');
     const date = activatedAt
       ? new Date(parseInt(activatedAt)).toLocaleDateString()
