@@ -3429,6 +3429,14 @@ function lockVault(){
   btn.disabled = false;
   btn.classList.remove('loading');
 
+  // FIX: Reset bioBtn — bisa ter-disabled jika lockVault dipanggil saat proses biometric sedang berjalan
+  const bioBtn = document.getElementById('bioBtn');
+  if(bioBtn){
+    bioBtn.disabled = false;
+    bioBtn.classList.remove('loading');
+    bioBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>${t('bio.btnUnlock')}</span>`;
+  }
+
   const firstTime = isFirstTime();
   btn.textContent = firstTime ? t('lock.createBtn') : t('lock.unlockBtn');
 
