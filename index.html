@@ -364,6 +364,7 @@ svg{display:block;flex-shrink:0}
 .filter-chip:hover{border-color:var(--border-focus);color:var(--text)}
 .filter-chip.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
 .filter-chip.fav-chip.active{border-color:var(--yellow);background:#2a200a;color:var(--yellow)}
+[data-theme="light"] .filter-chip.fav-chip.active{background:#fef9c3;color:#a16207;border-color:#ca8a04}
 [data-theme="light"] .cat-shopping{background:#fff3e8;color:#c2500a}
 [data-theme="light"] .cat-gaming{background:#f0eeff;color:#6d42e0}
 [data-theme="light"] .cat-social{background:#f3e8ff;color:#9333ea}
@@ -596,6 +597,7 @@ svg{display:block;flex-shrink:0}
 }
 .act-btn-icon:hover{background:var(--surface);border-color:var(--border-focus);color:var(--text);}
 .act-btn-icon.fav.active{color:var(--yellow);border-color:#3a2f00;background:#1a1600;}
+[data-theme="light"] .act-btn-icon.fav.active{border-color:#ca8a04;background:#fef9c3;}
 
 .act-btn{
   flex:1;min-width:0;
@@ -1434,7 +1436,7 @@ svg{display:block;flex-shrink:0}
 .cf-form-row{display:flex;align-items:center;gap:8px}
 .cf-form-input{flex:1;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;font-family:var(--mono);outline:none}
 .cf-form-input:focus{border-color:var(--accent)}
-.cf-form-type{padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:11px;font-family:var(--sans);cursor:pointer;outline:none}
+.cf-form-type{padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:11px;font-family:var(--sans);cursor:pointer;outline:none;min-width:80px;flex-shrink:0;-webkit-appearance:auto;appearance:auto}
 .cf-add-btn{width:100%;padding:9px;margin-top:4px;border:1px dashed var(--border);border-radius:9px;background:transparent;color:var(--dim);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
 .cf-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .cf-premium-gate{background:var(--accent-dim);border:1px solid #3a2f7a;border-radius:9px;padding:10px 12px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:10px}
