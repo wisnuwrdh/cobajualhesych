@@ -1057,7 +1057,7 @@ svg{display:block;flex-shrink:0}
 }
 .toast{
   position:fixed;
-  bottom:88px;left:50%;transform:translateX(-50%) translateY(6px);
+  bottom:120px;left:50%;transform:translateX(-50%) translateY(6px);
   background:var(--card);
   color:var(--text);
   border:1px solid var(--border-focus);
@@ -2716,7 +2716,7 @@ const STRINGS = {
     'toast.saved':'Updated','toast.added':'Saved','toast.deleted':'Deleted',
     'toast.passGen':'Password generated',
     'toast.backupSaved':'Backup saved',
-    'toast.copiedPw':'Password copied — clipboard clears in 30 seconds',
+    'toast.copiedPw':'Password copied',
     'toast.copiedUser':'Username copied',
     'toast.secretExpired':'Lock secret expired: {name}',
     'toast.secretCancelled':'Lock secret cancelled',
@@ -3413,7 +3413,6 @@ function lockVault(){
   _key=null; _items=[];_expanded.clear();_revealed.clear();
   unmountAllTOTP();
   // Bersihkan clipboard saat lock
-  if(_clipboardClearTimer) clearTimeout(_clipboardClearTimer);
   try{ navigator.clipboard.writeText(''); }catch{}
   document.getElementById('lockScreen').style.display='flex';
   document.getElementById('app').style.display='none';
@@ -4116,19 +4115,6 @@ function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 
 // ===== COPY =====
 const _copyTimers = {};
-let _clipboardClearTimer = null;
-
-// Bersihkan clipboard otomatis setelah 30 detik
-function scheduleClipboardClear(){
-  if(_clipboardClearTimer) clearTimeout(_clipboardClearTimer);
-  _clipboardClearTimer = setTimeout(async ()=>{
-    try{
-      // Hanya clear jika clipboard masih berisi data sensitif (tidak bisa cek isinya,
-      // jadi kita tulis string kosong untuk memaksa clear)
-      await navigator.clipboard.writeText('');
-    }catch{}
-  }, 30000);
-}
 
 function setCopyFeedback(id, field, label){
   const btnId = `copy-btn-${id}-${field}`;
@@ -4149,7 +4135,6 @@ async function copyPass(id){
   try{
     const pw = await decrypt(item.password);
     await navigator.clipboard.writeText(pw);
-    scheduleClipboardClear(); // auto-clear clipboard dalam 30 detik
     setCopyFeedback(id,'pw','Salin PW');
     showToast(t('toast.copiedPw'), 'ok');
   }catch(e){showToast(t('toast.copyFail',{msg:e.message}),'err')}
