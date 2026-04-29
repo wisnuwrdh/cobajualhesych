@@ -6236,13 +6236,10 @@ let _devModeBuffer = '';
 function _initDevMode(){
   const searchEl = document.getElementById('search');
   if(!searchEl) return;
-  searchEl.addEventListener('keydown', function(e){
-    _devModeBuffer += e.key.toLowerCase();
-    if(_devModeBuffer.length > _DEV_SECRET.length){
-      _devModeBuffer = _devModeBuffer.slice(-_DEV_SECRET.length);
-    }
-    if(_devModeBuffer === _DEV_SECRET){
-      _devModeBuffer = '';
+  // Pakai input event supaya kompatibel dengan virtual keyboard Android
+  searchEl.addEventListener('input', function(){
+    const val = searchEl.value;
+    if(val === _DEV_SECRET){
       const current = localStorage.getItem('_hesych_dev_premium') === '1';
       if(current){
         localStorage.removeItem('_hesych_dev_premium');
