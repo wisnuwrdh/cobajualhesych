@@ -6451,62 +6451,12 @@ async function doEncExport(){
 const _LICENSE_KEY = 'vault_license';
 
 // ========================================================
-// DEV MODE - HAPUS BLOK INI SEBELUM PRODUCTION LAUNCH
-// Aktifkan: ketik "devmode" di search box -> premium bypass ON
-// Nonaktifkan: ketik "devmode" lagi -> premium bypass OFF
-// ========================================================
-const _DEV_SECRET = 'devmode';
-let _devModeBuffer = '';
-function _initDevMode(){
-  const searchEl = document.getElementById('search');
-  if(!searchEl) return;
-  // Pakai input event supaya kompatibel dengan virtual keyboard Android
-  searchEl.addEventListener('input', function(){
-    const val = searchEl.value;
-    if(val === _DEV_SECRET){
-      const current = localStorage.getItem('_hesych_dev_premium') === '1';
-      if(current){
-        localStorage.removeItem('_hesych_dev_premium');
-        _showDevToast('DEV MODE OFF - Premium bypass dinonaktifkan');
-      } else {
-        localStorage.setItem('_hesych_dev_premium', '1');
-        _showDevToast('DEV MODE ON - Semua fitur Premium aktif');
-      }
-      searchEl.value = '';
-      document.getElementById('searchClear').classList.remove('visible');
-      render();
-    }
-  });
-}
-function _showDevToast(msg){
-  let t = document.getElementById('_devToast');
-  if(!t){
-    t = document.createElement('div');
-    t.id = '_devToast';
-    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#6c63ff;border:1px solid #6c63ff;padding:8px 16px;border-radius:20px;font-size:12px;font-family:monospace;z-index:9999;pointer-events:none;transition:opacity .3s';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.style.opacity = '1';
-  clearTimeout(t._tid);
-  t._tid = setTimeout(()=>{ t.style.opacity='0'; }, 2500);
-}
-// END DEV MODE BLOCK
-// ========================================================
+
 
 function isPremium(){
-  // DEV MODE CHECK - HAPUS BARIS INI SEBELUM PRODUCTION LAUNCH
-  if(localStorage.getItem('_hesych_dev_premium') === '1') return true;
-  // END DEV MODE CHECK
   try{
     const raw = localStorage.getItem(_LICENSE_KEY);
     if(!raw) return false;
-    const parts = raw.split('.');
-    if(parts.length !== 3) return false;
-    // Decode payload (no local HMAC check -- trust server-verified flag)
-    const payload = JSON.parse(atob(parts[1]));
-    if(!payload || payload.tier !== 'lifetime') return false;
-    // Check server-verified flag set during activation
     const verified = localStorage.getItem(_LICENSE_KEY + '_verified');
     return verified === '1';
   }catch(e){ return false; }
@@ -6887,7 +6837,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   updateBioUI();
   updatePremiumUI();
   checkLockout();
-  _initDevMode(); // DEV MODE - HAPUS BARIS INI SEBELUM PRODUCTION LAUNCH
+
   if(lockedUntil > Date.now()) startLockoutTimer();
 
   if(isFirstTime()){
