@@ -1436,7 +1436,8 @@ svg{display:block;flex-shrink:0}
 .cf-form-row{display:flex;align-items:center;gap:8px}
 .cf-form-input{flex:1;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;font-family:var(--mono);outline:none}
 .cf-form-input:focus{border-color:var(--accent)}
-.cf-form-type{padding:6px 8px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:11px;font-family:var(--sans);cursor:pointer;outline:none;min-width:80px;flex-shrink:0;-webkit-appearance:auto;appearance:auto}
+.cf-form-type{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--sub);font-size:11px;font-family:var(--sans);cursor:pointer;outline:none;flex-shrink:0;white-space:nowrap;transition:all .15s}
+.cf-form-type:hover{border-color:var(--accent);color:var(--accent)}
 .cf-add-btn{width:100%;padding:9px;margin-top:4px;border:1px dashed var(--border);border-radius:9px;background:transparent;color:var(--dim);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
 .cf-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .cf-premium-gate{background:var(--accent-dim);border:1px solid #3a2f7a;border-radius:9px;padding:10px 12px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -5668,10 +5669,9 @@ function renderCFForm(){
         <input class="cf-form-input" placeholder="${t('cf.fieldNamePh')}"
           value="${esc(f.name)}"
           oninput="_cfFormFields[${i}].name=this.value"/>
-        <select class="cf-form-type" onchange="_cfFormFields[${i}].type=this.value">
-          <option value="text"${f.type==='text'?' selected':''}>${t('cf.typeText')}</option>
-          <option value="password"${f.type==='password'?' selected':''}>${t('cf.typePassword')}</option>
-        </select>
+        <button type="button" class="cf-form-type" onclick="_cfFormFields[${i}].type=_cfFormFields[${i}].type==='password'?'text':'password';renderCFForm()" title="Toggle type">
+          ${f.type==='password'?'🔒 '+t('cf.typePassword'):'T  '+t('cf.typeText')}
+        </button>
         <button class="cf-item-remove" onclick="_cfFormFields.splice(${i},1);renderCFForm()" title="${t('cf.removeField')}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
