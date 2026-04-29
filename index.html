@@ -6335,8 +6335,8 @@ async function renderHistoryBody(){
 }
 
 async function toggleHistReveal(hid){
-  const el = document.getElementById(\`hist-pw-\${hid}\`);
-  const eyeBtn = document.getElementById(\`hist-eye-\${hid}\`);
+  const el = document.getElementById(`hist-pw-${hid}`);
+  const eyeBtn = document.getElementById(`hist-eye-${hid}`);
   if(!el) return;
   if(_histRevealed[hid]){
     el.textContent = '••••••••••';
