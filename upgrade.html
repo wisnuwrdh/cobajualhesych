@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hesych Premium — $9.99 Lifetime</title>
+<meta name="description" content="Upgrade to Hesych Premium. One-time payment, lifetime access. No subscription ever.">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0c;--surface:#111114;--card:#16161a;
+  --border:#222228;--border-focus:#3a3a48;
+  --text:#f0f0f4;--sub:#888896;--dim:#444452;
+  --accent:#7c6af7;--accent-glow:rgba(124,106,247,0.15);--accent-dim:#2a2440;
+  --green:#00c896;--warn:#f0a000;
+  --radius:10px;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px 20px;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 600px 500px at 50% 0%, rgba(124,106,247,0.1) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.wrap{width:100%;max-width:420px;position:relative}
+
+/* ── BACK LINK ── */
+.back{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--sub);text-decoration:none;
+  margin-bottom:28px;transition:color .15s;
+}
+.back:hover{color:var(--text)}
+.back svg{width:14px;height:14px}
+
+/* ── LOGO ── */
+.logo{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:32px;
+}
+.logo-icon{
+  width:40px;height:40px;
+  border-radius:10px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;overflow:hidden;
+}
+.logo-text{font-size:20px;font-weight:600;letter-spacing:-.01em}
+
+/* ── CARD ── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:28px;margin-bottom:12px;
+}
+
+.price-row{
+  display:flex;align-items:baseline;gap:8px;margin-bottom:6px;
+}
+.price{font-size:42px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+.price-period{font-size:14px;color:var(--sub)}
+.price-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  padding:3px 9px;border-radius:20px;
+  background:rgba(0,200,150,0.12);border:1px solid rgba(0,200,150,0.25);
+  color:var(--green);margin-bottom:20px;letter-spacing:.04em;
+}
+.price-badge::before{
+  content:'';width:5px;height:5px;border-radius:50%;
+  background:var(--green);flex-shrink:0;
+}
+.card-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:22px}
+
+/* ── FEATURES ── */
+.features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.feature{display:flex;align-items:center;gap:10px;font-size:13px}
+.feature-icon{
+  width:22px;height:22px;border-radius:6px;
+  background:rgba(0,200,150,0.12);border:1px solid rgba(0,200,150,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;flex-shrink:0;color:var(--green);
+}
+.feature-text{color:var(--text)}
+.feature-sub{font-size:11px;color:var(--sub);margin-top:1px}
+
+/* ── BUY BUTTON ── */
+.btn-buy{
+  width:100%;padding:15px;border-radius:10px;
+  background:var(--accent);border:none;cursor:pointer;
+  font-family:var(--sans);font-size:15px;font-weight:600;
+  color:#fff;letter-spacing:-.01em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:opacity .15s,transform .1s;
+  text-decoration:none;
+}
+.btn-buy:hover{opacity:.9}
+.btn-buy:active{transform:scale(.98)}
+.btn-buy-sub{
+  font-size:11px;font-weight:400;color:rgba(255,255,255,0.6);
+  margin-top:2px;
+}
+
+/* ── TRUST ROW ── */
+.trust{
+  display:flex;align-items:center;justify-content:center;
+  gap:20px;padding:14px 0;
+  border-top:1px solid var(--border);margin-top:4px;
+}
+.trust-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--sub);
+}
+.trust-item svg{width:13px;height:13px;color:var(--dim)}
+
+/* ── COMPARE ── */
+.compare-toggle{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:12px;color:var(--sub);cursor:pointer;
+  margin-bottom:12px;padding:8px;
+  background:transparent;border:none;font-family:var(--sans);
+  width:100%;transition:color .15s;
+}
+.compare-toggle:hover{color:var(--text)}
+.compare-toggle svg{width:13px;height:13px;transition:transform .2s}
+.compare-toggle.open svg{transform:rotate(180deg)}
+
+.compare-table{
+  display:none;background:var(--card);
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  margin-bottom:12px;
+}
+.compare-table.open{display:block}
+.compare-table table{width:100%;border-collapse:collapse;font-size:12px}
+.compare-table th{
+  padding:10px 14px;text-align:left;font-size:11px;
+  font-family:var(--mono);color:var(--sub);letter-spacing:.04em;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.compare-table th:not(:first-child){text-align:center}
+.compare-table td{
+  padding:9px 14px;border-bottom:1px solid rgba(34,34,40,0.6);
+  color:var(--sub);
+}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table td:not(:first-child){text-align:center}
+.tick{color:var(--green);font-size:14px}
+.cross{color:var(--dim);font-size:16px}
+.td-free{color:var(--sub)}
+.td-pro{color:var(--accent);font-weight:500}
+
+/* ── HAVE KEY ── */
+.have-key{
+  text-align:center;font-size:12px;color:var(--sub);margin-bottom:24px;
+}
+.have-key a{color:var(--accent);text-decoration:none}
+.have-key a:hover{text-decoration:underline}
+
+/* ── LICENSE INPUT (inline) ── */
+.key-form{display:none;margin-bottom:16px}
+.key-form.open{display:block}
+.key-input-wrap{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;margin-bottom:10px;
+  transition:border-color .15s;
+}
+.key-input-wrap:focus-within{border-color:var(--border-focus)}
+.key-input-label{font-size:10px;color:var(--sub);font-family:var(--mono);margin-bottom:6px;letter-spacing:.05em}
+.key-input{
+  width:100%;background:transparent;border:none;outline:none;
+  font-family:var(--mono);font-size:12px;color:var(--text);
+  letter-spacing:.02em;
+}
+.key-input::placeholder{color:var(--dim)}
+.btn-activate{
+  width:100%;padding:11px;border-radius:8px;
+  background:var(--accent-dim);border:1px solid rgba(124,106,247,0.3);
+  color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:500;
+  cursor:pointer;transition:background .15s;
+}
+.btn-activate:hover{background:rgba(124,106,247,0.2)}
+.key-error{font-size:12px;color:#f05;margin-top:8px;text-align:center;display:none}
+.key-loading{opacity:.6;pointer-events:none}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:10px 18px;font-size:13px;white-space:nowrap;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:999;
+  pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:rgba(0,200,150,0.3);color:var(--green)}
+.toast.error{border-color:rgba(255,0,85,0.3);color:#f05}
+
+/* ── ACTIVATED STATE ── */
+.activated-card{display:none}
+.activated-card.show{display:block}
+.buy-section.hide{display:none}
+
+.activated-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(0,200,150,0.12);border:1px solid rgba(0,200,150,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin:0 auto 16px;
+}
+.activated-title{font-size:18px;font-weight:600;text-align:center;margin-bottom:6px}
+.activated-sub{font-size:13px;color:var(--sub);text-align:center;line-height:1.5;margin-bottom:20px}
+.btn-open{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:13px;border-radius:10px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;
+  text-decoration:none;transition:border-color .15s;
+}
+.btn-open:hover{border-color:var(--border-focus)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <a href="./index.html" class="back">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10 3L5 8l5 5"/>
+    </svg>
+    Back to Hesych
+  </a>
+
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+        <rect width="64" height="64" rx="14" fill="#0a0a0c"/>
+        <path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="#f0f0f4"/>
+        <circle cx="32" cy="28" r="7" fill="#0a0a0c"/>
+        <path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="#0a0a0c"/>
+        <circle cx="32" cy="28" r="2.8" fill="#7c6af7"/>
+      </svg>
+    </div>
+    <span class="logo-text">Hesych</span>
+  </div>
+
+  <!-- Activated State (shown after activation) -->
+  <div class="card activated-card" id="activatedCard">
+    <div class="activated-icon">✓</div>
+    <div class="activated-title">Premium Activated! 🎉</div>
+    <div class="activated-sub">Your vault is now unlocked. All premium features are ready to use.</div>
+    <a href="./index.html" class="btn-open">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 8h10M9 4l4 4-4 4"/>
+      </svg>
+      Open Hesych
+    </a>
+  </div>
+
+  <!-- Buy Section -->
+  <div id="buySection">
+
+    <div class="card">
+      <div class="price-row">
+        <span class="price">$9.99</span>
+        <span class="price-period">USD</span>
+      </div>
+      <div class="price-badge">PAY ONCE · USE FOREVER</div>
+
+      <div class="card-title">Hesych Premium</div>
+      <div class="card-sub">One-time payment. Lifetime access. No subscription, no renewal, no surprises.</div>
+
+      <ul class="features">
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div><div class="feature-text">Everything in Free</div><div class="feature-sub">AES-256-GCM, biometric, HIBP, TOTP, expiry reminder, secret lock</div></div>
+        </li>
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+          </div>
+          <div><div class="feature-text">Cloud Sync <span style="font-family:var(--mono);font-size:10px;color:var(--warn)">SOON</span></div><div class="feature-sub">E2E encrypted sync across all devices</div></div>
+        </li>
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <div><div class="feature-text">Vault Health Score</div><div class="feature-sub">Detect weak, old, and duplicate passwords</div></div>
+        </li>
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div><div class="feature-text">Encrypted Export / Backup</div><div class="feature-sub">Portable, encrypted vault backups</div></div>
+        </li>
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div><div class="feature-text">Advanced Generator</div><div class="feature-sub">Bulk generate multiple passwords at once</div></div>
+        </li>
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <div><div class="feature-text">Custom Fields & Tags</div><div class="feature-sub">Organize your vault your way</div></div>
+        </li>
+        <li class="feature">
+          <div class="feature-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <div><div class="feature-text">Encrypted Share Links</div><div class="feature-sub">Securely share credentials once</div></div>
+        </li>
+      </ul>
+
+      <a id="buyBtn" href="#" class="btn-buy" onclick="handleBuy(event)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="5" width="12" height="9" rx="2"/>
+          <path d="M5 5V4a3 3 0 016 0v1"/>
+        </svg>
+        Get Hesych Premium
+      </a>
+
+      <div class="trust">
+        <div class="trust-item">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l1.9 3.8L14 5.7l-3 2.9.7 4.1L8 10.8l-3.7 1.9.7-4.1L2 5.7l4.1-.9z"/></svg>
+          Secure checkout
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/><circle cx="8" cy="8" r="7"/></svg>
+          Global payments
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9l4 4 8-8"/></svg>
+          Instant delivery
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare toggle -->
+    <button class="compare-toggle" id="compareToggle" onclick="toggleCompare()">
+      Compare Free vs Premium
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+    </button>
+
+    <div class="compare-table" id="compareTable">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th style="color:var(--accent)">Premium</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Local password storage</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>AES-256-GCM encryption</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Biometric unlock</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>HIBP breach check</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>TOTP / 2FA storage</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Password generator</td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Vault Health Score</td><td><span class="cross">—</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Custom fields & tags</td><td><span class="cross">—</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Encrypted share links</td><td><span class="cross">—</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Encrypted export</td><td><span class="cross">—</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Cloud sync (soon)</td><td><span class="cross">—</span></td><td><span class="tick">✓</span></td></tr>
+          <tr>
+            <td style="font-weight:500;color:var(--text)">Price</td>
+            <td class="td-free">Free</td>
+            <td class="td-pro">$9.99</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Have a key -->
+    <div class="have-key">
+      Already purchased? <a href="#" onclick="toggleKeyForm(event)">Enter your license key</a>
+    </div>
+
+    <div class="key-form" id="keyForm">
+      <div class="key-input-wrap">
+        <div class="key-input-label">LICENSE KEY</div>
+        <input class="key-input" id="licenseInput" type="text" placeholder="eyJ..." autocomplete="off" spellcheck="false">
+      </div>
+      <button class="btn-activate" id="activateBtn" onclick="handleActivate()">Activate License</button>
+      <div class="key-error" id="keyError">Invalid or expired license key.</div>
+    </div>
+
+  </div><!-- /buySection -->
+
+</div><!-- /wrap -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config — replace with your actual Lemon Squeezy checkout URL ──────────
+const LEMON_CHECKOUT_URL = 'https://hesych-app.lemonsqueezy.com/checkout/buy/78a7c1a0-313d-4f2f-828e-ffb42a153780';
+// ─────────────────────────────────────────────────────────────────────────────
+
+function handleBuy(e) {
+  e.preventDefault();
+  window.location.href = LEMON_CHECKOUT_URL;
+}
+
+function toggleCompare() {
+  const btn = document.getElementById('compareToggle');
+  const table = document.getElementById('compareTable');
+  btn.classList.toggle('open');
+  table.classList.toggle('open');
+}
+
+function toggleKeyForm(e) {
+  e.preventDefault();
+  document.getElementById('keyForm').classList.toggle('open');
+  if (document.getElementById('keyForm').classList.contains('open')) {
+    setTimeout(() => document.getElementById('licenseInput').focus(), 100);
+  }
+}
+
+async function handleActivate() {
+  const input = document.getElementById('licenseInput');
+  const btn = document.getElementById('activateBtn');
+  const err = document.getElementById('keyError');
+  const key = input.value.trim();
+
+  if (!key) return;
+
+  err.style.display = 'none';
+  btn.textContent = 'Verifying…';
+  btn.classList.add('key-loading');
+
+  try {
+    const res = await fetch('/api/verify-license', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license: key }),
+    });
+    const data = await res.json();
+
+    if (data.valid) {
+      // Save to localStorage (same keys as index.html)
+      localStorage.setItem('vault_license', key);
+      localStorage.setItem('vault_license_verified', '1');
+      localStorage.setItem('vault_license_at', Date.now().toString());
+
+      // Show activated state
+      document.getElementById('buySection').classList.add('hide');
+      document.getElementById('activatedCard').classList.add('show');
+      showToast('🎉 Premium activated!', 'success');
+    } else {
+      err.style.display = 'block';
+      btn.textContent = 'Activate License';
+      btn.classList.remove('key-loading');
+    }
+  } catch {
+    err.textContent = 'Connection error. Please try again.';
+    err.style.display = 'block';
+    btn.textContent = 'Activate License';
+    btn.classList.remove('key-loading');
+  }
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Handle license key passed via URL param (e.g. from email link)
+const urlParams = new URLSearchParams(window.location.search);
+const keyFromUrl = urlParams.get('key');
+if (keyFromUrl) {
+  document.getElementById('keyForm').classList.add('open');
+  document.getElementById('licenseInput').value = keyFromUrl;
+}
+
+// Enter key to activate
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('keyForm').classList.contains('open')) {
+    handleActivate();
+  }
+});
+</script>
+</body>
+</html>
