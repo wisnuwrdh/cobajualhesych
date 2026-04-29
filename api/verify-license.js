@@ -52,7 +52,7 @@ async function verifyGumroadKey(licenseKey, res) {
 
   try {
     const body = new URLSearchParams();
-    body.append('product_id', productId);
+    body.append('product_permalink', productId);
     body.append('license_key', licenseKey);
     body.append('increment_uses_count', 'false'); // jangan increment, hanya verifikasi
 
