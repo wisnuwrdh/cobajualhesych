@@ -396,6 +396,14 @@ svg{display:block;flex-shrink:0}
 }
 .search-box:focus{border-color:var(--border-focus)}
 .search-box::placeholder{color:var(--dim)}
+.search-box:-webkit-autofill,
+.search-box:-webkit-autofill:hover,
+.search-box:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--surface) inset!important;
+  -webkit-text-fill-color:var(--text)!important;
+  border-color:var(--border)!important;
+  transition:background-color 9999s ease-in-out 0s;
+}
 
 .search-icon{
   position:absolute;left:11px;top:50%;transform:translateY(-50%);
