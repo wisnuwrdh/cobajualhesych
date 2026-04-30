@@ -3,21 +3,51 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hesych — Your secrets, unspoken</title>
-<meta name="description" content="Local-first password manager. AES-256-GCM, zero-knowledge, one-time payment. No subscription, no cloud vault.">
-<meta property="og:title" content="Hesych — Your secrets, unspoken">
-<meta property="og:description" content="AES-256-GCM encrypted password manager. One-time payment $9.99. No subscription, no cloud, no compromise.">
+<title>Hesych — Local-First Password Manager, $9.99 Lifetime</title>
+<meta name="description" content="Hesych is a local-first password manager with AES-256-GCM encryption. Zero-knowledge, no subscription, one-time payment of $9.99. Your passwords never leave your device.">
+<meta name="robots" content="index, follow">
+<meta name="keywords" content="password manager, local password manager, offline password manager, no subscription password manager, AES-256 encryption, zero knowledge, one time payment, lifetime password manager">
+<meta property="og:title" content="Hesych — Local-First Password Manager, $9.99 Lifetime">
+<meta property="og:description" content="AES-256-GCM encrypted password manager. One-time payment $9.99. No subscription, no cloud, your data never leaves your device.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://hesych.vercel.app">
-<meta property="og:image" content="https://hesych.vercel.app/og-image.png">
+<meta property="og:url" content="https://hesych.com">
+<meta property="og:image" content="https://hesych.com/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Hesych — Your secrets, unspoken">
-<meta name="twitter:description" content="AES-256-GCM encrypted password manager. One-time payment $9.99. No subscription, no cloud, no compromise.">
-<meta name="twitter:image" content="https://hesych.vercel.app/og-image.png">
-<link rel="canonical" href="https://hesych.vercel.app/landing.html">
+<meta name="twitter:title" content="Hesych — Local-First Password Manager, $9.99 Lifetime">
+<meta name="twitter:description" content="AES-256-GCM encrypted password manager. One-time payment $9.99. No subscription, no cloud, your data never leaves your device.">
+<meta name="twitter:image" content="https://hesych.com/og-image.png">
+<link rel="canonical" href="https://hesych.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Hesych",
+  "description": "Local-first password manager with AES-256-GCM encryption. Zero-knowledge, one-time payment, no subscription.",
+  "url": "https://hesych.com",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "offers": {
+    "@type": "Offer",
+    "price": "9.99",
+    "priceCurrency": "USD",
+    "priceValidUntil": "2027-12-31",
+    "availability": "https://schema.org/InStock",
+    "description": "Lifetime access, one-time payment"
+  },
+  "featureList": [
+    "AES-256-GCM encryption",
+    "Zero-knowledge architecture",
+    "Biometric unlock (Face ID / Fingerprint)",
+    "TOTP / 2FA storage",
+    "HIBP breach check",
+    "Offline-first, no internet required",
+    "One-time payment, no subscription"
+  ]
+}
+</script>
 <style>
   :root {
     --bg: #0a0a0c;
@@ -407,25 +437,77 @@
 
   /* ---------- Footer ---------- */
   footer {
-    padding: 40px 0 56px;
+    padding: 56px 0 40px;
     border-top: 1px solid var(--border);
     margin-top: 32px;
   }
-  .foot {
-    display: flex; align-items: center; justify-content: space-between; gap: 20px;
-    flex-wrap: wrap;
+  .foot-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
   }
-  .foot-brand { display: flex; align-items: center; gap: 10px; }
+  .foot-brand-col {}
+  .foot-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .foot-tagline {
+    font-size: 13px; color: var(--sub); line-height: 1.6;
+    max-width: 260px; margin-bottom: 18px;
+  }
+  .foot-social {
+    display: flex; gap: 8px;
+  }
+  .foot-social a {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border); border-radius: 8px;
+    display: grid; place-items: center;
+    color: var(--sub); transition: all .15s;
+  }
+  .foot-social a:hover { border-color: var(--border-focus); color: var(--text); }
+  .foot-col-title {
+    font-size: 11px; font-family: var(--mono);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--dim); margin-bottom: 14px;
+  }
+  .foot-links {
+    display: flex; flex-direction: column; gap: 10px;
+    list-style: none;
+  }
+  .foot-links a {
+    font-size: 13px; color: var(--sub);
+    transition: color .15s;
+  }
+  .foot-links a:hover { color: var(--text); }
+  .foot-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    padding-top: 24px;
+  }
+  .foot-copy {
+    font-size: 12px; color: var(--dim); font-family: var(--mono);
+  }
   .foot-note {
     color: var(--dim); font-family: var(--mono);
-    font-size: 10px; letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin-top: 20px;
-    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: 0.04em;
+    display: flex; align-items: center; gap: 6px;
   }
   .foot-note::before {
-    content: ""; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green); box-shadow: 0 0 8px var(--green);
+    content: ""; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 6px var(--green);
+    flex-shrink: 0;
+  }
+  @media (max-width: 640px) {
+    .foot-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .foot-brand-col {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 400px) {
+    .foot-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* ---------- Modal ---------- */
@@ -956,19 +1038,53 @@
 <!-- ============== FOOTER ============== -->
 <footer>
   <div class="wrap">
-    <div class="foot">
-      <div class="foot-brand">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="14" fill="#0a0a0c"/><path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="#f0f0f4"/><circle cx="32" cy="28" r="7" fill="#0a0a0c"/><path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="#0a0a0c"/><circle cx="32" cy="28" r="2.8" fill="#7c6af7"/></svg>
-        </span>
-        <span>
+    <div class="foot-grid">
+
+      <!-- Brand col -->
+      <div class="foot-brand-col">
+        <div class="foot-brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="14" fill="#0a0a0c"/><path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="#f0f0f4"/><circle cx="32" cy="28" r="7" fill="#0a0a0c"/><path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="#0a0a0c"/><circle cx="32" cy="28" r="2.8" fill="#7c6af7"/></svg>
+          </span>
           <span class="brand-name">Hesych</span>
-          <span class="brand-tag">© 2026</span>
-        </span>
+        </div>
+        <p class="foot-tagline">Local-first password manager. Your data is encrypted on your device and never leaves it.</p>
+        <div class="foot-social">
+          <a href="https://x.com/hesych" target="_blank" rel="noopener" aria-label="Twitter/X">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="mailto:hi@hesych.com" aria-label="Email">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </a>
+        </div>
       </div>
-      <a href="./app.html" class="btn btn-sm" >Open Hesych</a>
+
+      <!-- Product col -->
+      <div>
+        <div class="foot-col-title">Product</div>
+        <ul class="foot-links">
+          <li><a href="./app.html">Open App</a></li>
+          <li><a href="./upgrade.html">Upgrade to Premium</a></li>
+          <li><a href="./upgrade.html#compare">Compare Plans</a></li>
+        </ul>
+      </div>
+
+      <!-- Company col -->
+      <div>
+        <div class="foot-col-title">Company</div>
+        <ul class="foot-links">
+          <li><a href="mailto:hi@hesych.com">Contact</a></li>
+          <li><a href="./privacy.html">Privacy Policy</a></li>
+          <li><a href="./terms.html">Terms of Service</a></li>
+        </ul>
+      </div>
+
     </div>
-    <div class="foot-note" >Zero-knowledge · Your data never leaves your device · Hesych</div>
+
+    <div class="foot-bottom">
+      <span class="foot-copy">© 2026 Hesych. All rights reserved.</span>
+      <span class="foot-note">Zero-knowledge · Your data never leaves your device</span>
+    </div>
   </div>
 </footer>
 
