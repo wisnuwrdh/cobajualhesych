@@ -1153,6 +1153,8 @@ svg{display:block;flex-shrink:0}
   border-radius:10px;padding:12px;margin-bottom:14px;
 }
 .license-status.active{border-color:#2a4a2a;background:#0e1e0e}
+[data-theme="light"] .license-status.active{border-color:#86efac;background:#f0fdf4}
+[data-theme="light"] .license-status-icon[style*="0e2a0e"]{background:#dcfce7!important;color:#16a34a!important}
 .license-status-icon{
   width:32px;height:32px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -1179,6 +1181,12 @@ svg{display:block;flex-shrink:0}
 .health-section.ok{border-color:#1a3a1a}
 .health-section.warn{border-color:#3a2a10}
 .health-section.bad{border-color:#3a1020}
+[data-theme="light"] .health-section.ok{border-color:#86efac;background:#f0fdf4}
+[data-theme="light"] .health-section.warn{border-color:#fde68a;background:#fffbeb}
+[data-theme="light"] .health-section.bad{border-color:#fca5a5;background:#fff1f2}
+[data-theme="light"] .health-icon-ok{background:#dcfce7;color:#16a34a}
+[data-theme="light"] .health-icon-warn{background:#fef3c7;color:#d97706}
+[data-theme="light"] .health-icon-bad{background:#fee2e2;color:#dc2626}
 .health-section-header{display:flex;align-items:center;gap:10px}
 .health-section-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .health-icon-ok{background:#0e2a0e;color:#4ade80}
@@ -1193,6 +1201,7 @@ svg{display:block;flex-shrink:0}
   padding:4px 8px;background:var(--surface);border-radius:6px;
   display:flex;align-items:center;justify-content:space-between;
 }
+[data-theme="light"] .health-affected-item{background:var(--bg);border:1px solid var(--border)}
 .health-affected-item button{
   background:none;border:none;cursor:pointer;color:var(--accent);
   font-size:10px;font-family:var(--sans);padding:2px 6px;
@@ -6547,7 +6556,7 @@ function renderLicenseSheet(){
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
         </div>
         <div class="license-info">
-          <div class="license-info-title">${t('premium.activeTitle')} <span class="premium-badge">PREMIUM</span></div>
+          <div class="license-info-title"><span class="premium-badge">PREMIUM</span></div>
           <div class="license-info-sub">${t('premium.activeSince', {date})}</div>
         </div>
       </div>
