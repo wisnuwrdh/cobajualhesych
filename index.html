@@ -1159,6 +1159,17 @@ document.querySelectorAll('[data-modal]').forEach(b => {
     window.location.href = './upgrade.html';
   });
 });
+
+/* Smooth scroll for Compare Plans footer link */
+document.querySelectorAll('a[href="./#compare"]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.getElementById('compare');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
 </script>
 </body>
 </html>
