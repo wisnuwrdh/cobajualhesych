@@ -39,6 +39,42 @@
     --mono: 'DM Mono', monospace;
   }
 
+  [data-theme="light"] {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #e0e0e8;
+    --border-focus: #b0b0c8;
+    --text: #111118;
+    --sub: #666674;
+    --dim: #aaaabc;
+    --accent: #7c6af7;
+    --accent-glow: #7c6af718;
+    --accent-dim: #ebe8ff;
+    --danger: #e0003a;
+    --green: #009970;
+    --warn: #c07800;
+  }
+
+  [data-theme="light"] body {
+    background:
+      radial-gradient(1200px 600px at 50% -200px, rgba(124,106,247,0.06), transparent 60%),
+      var(--bg);
+  }
+
+  [data-theme="light"] .nav {
+    background: rgba(245,245,247,0.8);
+  }
+
+  [data-theme="light"] .feat-title .soon {
+    background: #fef3c7;
+  }
+
+  [data-theme="light"] .price-strike-label {
+    background: rgba(192,120,0,0.08);
+    border-color: rgba(192,120,0,0.2);
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   body {
@@ -78,20 +114,16 @@
   .brand-tag { color: var(--sub); font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
 
   .nav-right { display: flex; align-items: center; gap: 10px; }
-  .lang-toggle {
-    display: inline-flex; align-items: center;
-    border: 1px solid var(--border); border-radius: 999px;
-    padding: 2px; background: var(--surface);
-    font-family: var(--mono); font-size: 11px;
-  }
-  .lang-toggle button {
-    padding: 4px 10px; border: 0; background: transparent;
-    color: var(--sub); border-radius: 999px;
+  .theme-toggle {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface);
+    color: var(--sub);
+    display: grid; place-items: center;
+    cursor: pointer;
     transition: all .15s;
   }
-  .lang-toggle button.active {
-    background: var(--accent-dim); color: var(--text);
-  }
+  .theme-toggle:hover { border-color: var(--border-focus); color: var(--text); }
 
   /* ---------- Buttons ---------- */
   .btn {
@@ -609,15 +641,14 @@
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="14" fill="#0a0a0c"/><path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="#f0f0f4"/><circle cx="32" cy="28" r="7" fill="#0a0a0c"/><path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="#0a0a0c"/><circle cx="32" cy="28" r="2.8" fill="#7c6af7"/></svg></span>
       <span>
         <span class="brand-name">Hesych</span>
-        <span class="brand-tag" data-i="brand.tag">· Local-first</span>
+        <span class="brand-tag" >· Local-first</span>
       </span>
     </a>
     <div class="nav-right">
-      <div class="lang-toggle" role="tablist" aria-label="Language">
-        <button data-lang="id" aria-label="Bahasa Indonesia">ID</button>
-        <button data-lang="en" aria-label="English">EN</button>
-      </div>
-      <a href="./index.html" class="btn btn-sm btn-primary" data-i="nav.open">Buka Hesych</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark mode">
+        <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <a href="./index.html" class="btn btn-sm btn-primary">Open Hesych</a>
     </div>
   </div>
 </nav>
@@ -629,22 +660,22 @@
   <div class="wrap">
     <div class="hero-inner">
       <div class="hero-text">
-        <span class="badge" data-i="hero.badge">Password Manager · Enkripsi Lokal · Sekali Bayar</span>
+        <span class="badge">Password Manager · Local Encryption · One-Time Payment</span>
         <h1>
-          <span data-i="hero.headline.1">Password Manager Paling Aman,</span><br>
-          <span class="hl" data-i="hero.headline.2">Tanpa Langganan.</span>
+          <span>The Most Secure Password Manager.</span><br>
+          <span class="hl">No Subscription.</span>
         </h1>
-        <p class="hero-sub" data-i="hero.sub">Enkripsi AES-256 lokal. Tanpa cloud. Bayar sekali, pakai selamanya.</p>
+        <p class="hero-sub">Local AES-256 encryption. No cloud. Pay once, yours forever.</p>
         <div class="hero-ctas">
-          <a href="./index.html" class="btn btn-lg" data-i="cta.try">Coba Gratis</a>
-          <a href="./upgrade.html" class="btn btn-lg btn-primary" data-i="cta.buy">Buy Now — $9.99</a>
+          <a href="./index.html" class="btn btn-lg">Try Free</a>
+          <a href="./upgrade.html" class="btn btn-lg btn-primary">Buy Now — $9.99</a>
         </div>
         <div class="hero-meta">
-          <span data-i="meta.aes">AES-256-GCM</span>
+          <span>AES-256-GCM</span>
           <span class="dot"></span>
-          <span data-i="meta.zk">Zero-Knowledge</span>
+          <span>Zero-Knowledge</span>
           <span class="dot"></span>
-          <span data-i="meta.open">Open Audit</span>
+          <span>Open Audit</span>
         </div>
       </div>
       <div class="hero-visual-col">
@@ -689,8 +720,8 @@
 <section>
   <div class="wrap">
     <div class="sec-head">
-      <span class="sec-kicker" data-i="feat.kicker">/ Fitur Inti</span>
-      <h2 class="sec-title" data-i="feat.title">Dibangun untuk privasi, bukan profit data.</h2>
+      <span class="sec-kicker" >/ Core Features</span>
+      <h2 class="sec-title" >Built for privacy, not data profit.</h2>
     </div>
     <div class="features">
       <article class="feat">
@@ -699,8 +730,8 @@
             <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
           </svg>
         </div>
-        <div class="feat-title" data-i="feat.aes.t">Enkripsi AES-256-GCM</div>
-        <p class="feat-desc" data-i="feat.aes.d">Standar militer. Key di-derive dengan Argon2id dari master password kamu.</p>
+        <div class="feat-title" >AES-256-GCM Encryption</div>
+        <p class="feat-desc" >Military-grade standard. Keys derived with PBKDF2 from your master password.</p>
       </article>
 
       <article class="feat">
@@ -709,8 +740,8 @@
             <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>
           </svg>
         </div>
-        <div class="feat-title" data-i="feat.hibp.t">HIBP Breach Check</div>
-        <p class="feat-desc" data-i="feat.hibp.d">Cek password kamu di database pelanggaran — k-anonymity, tanpa kirim password.</p>
+        <div class="feat-title" >HIBP Breach Check</div>
+        <p class="feat-desc" >Check your passwords against breach databases — k-anonymity, never sends your password.</p>
       </article>
 
       <article class="feat">
@@ -719,8 +750,8 @@
             <rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/>
           </svg>
         </div>
-        <div class="feat-title" data-i="feat.bio.t">Biometric Unlock</div>
-        <p class="feat-desc" data-i="feat.bio.d">Face ID dan fingerprint. Master password hanya untuk first-run dan re-auth.</p>
+        <div class="feat-title" >Biometric Unlock</div>
+        <p class="feat-desc" >Face ID and fingerprint. Master password only needed for first-run and re-auth.</p>
       </article>
 
       <article class="feat">
@@ -729,8 +760,8 @@
             <circle cx="9" cy="15" r="4"/><path d="m12 12 8-8M16 4h4v4M14 6l2 2"/>
           </svg>
         </div>
-        <div class="feat-title" data-i="feat.totp.t">TOTP / 2FA</div>
-        <p class="feat-desc" data-i="feat.totp.d">Simpan kode otentikasi dua-faktor. Auto-fill 6-digit dalam sekali tap.</p>
+        <div class="feat-title" >TOTP / 2FA</div>
+        <p class="feat-desc" >Store two-factor codes. Auto-fill 6-digit codes in one tap.</p>
       </article>
 
       <article class="feat">
@@ -739,8 +770,8 @@
             <path d="M4 12a8 8 0 0 1 16 0"/><path d="M2 20 22 4"/><path d="M8 16a4 4 0 0 1 7 0"/>
           </svg>
         </div>
-        <div class="feat-title" data-i="feat.offline.t">100% Offline</div>
-        <p class="feat-desc" data-i="feat.offline.d">Tidak ada server. Tidak ada telemetri. Airplane mode? Tetap jalan sempurna.</p>
+        <div class="feat-title" >100% Offline</div>
+        <p class="feat-desc" >No servers. No telemetry. Airplane mode? Works perfectly.</p>
       </article>
 
       <article class="feat">
@@ -750,10 +781,10 @@
           </svg>
         </div>
         <div class="feat-title">
-          <span data-i="feat.sync.t">Cloud Sync</span>
-          <span class="soon" data-i="feat.soon">Soon</span>
+          <span >Cloud Sync</span>
+          <span class="soon" >Soon</span>
         </div>
-        <p class="feat-desc" data-i="feat.sync.d">End-to-end encrypted sync multi-device. Opsional, tidak wajib.</p>
+        <p class="feat-desc" >End-to-end encrypted multi-device sync. Optional, never required.</p>
       </article>
     </div>
   </div>
@@ -765,95 +796,95 @@
     <div class="cmp-price-grid">
     <div><!-- compare column -->
       <div class="sec-head">
-        <span class="sec-kicker" data-i="cmp.kicker">/ Gratis vs Premium</span>
-        <h2 class="sec-title" data-i="cmp.title">Pakai gratis selamanya. Upgrade kalau butuh sync.</h2>
+        <span class="sec-kicker" >/ Free vs Premium</span>
+        <h2 class="sec-title" >Free forever. Upgrade only if you need sync.</h2>
       </div>
 
       <div class="compare" role="table">
       <div class="compare-row compare-head" role="row">
-        <span data-i="cmp.col.feat">Fitur</span>
-        <span style="text-align:center" data-i="cmp.col.free">Gratis</span>
-        <span style="text-align:center" data-i="cmp.col.pro">Premium</span>
+        <span >Feature</span>
+        <span style="text-align:center" >Free</span>
+        <span style="text-align:center" >Premium</span>
       </div>
 
       <div class="compare-row">
-        <span data-i="cmp.r1">Simpan password lokal</span>
+        <span >Store passwords locally</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r2">Enkripsi AES-256-GCM</span>
+        <span >AES-256-GCM encryption</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r3">Biometric unlock</span>
+        <span >Biometric unlock</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r4">HIBP breach check</span>
+        <span >HIBP breach check</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r5">TOTP / 2FA storage</span>
+        <span >TOTP / 2FA storage</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r10">Password Expiry Reminder</span>
+        <span >Password Expiry Reminder</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r14">Secret Lock (Hide for a While)</span>
+        <span >Secret Lock (Hide for a While)</span>
         <span class="c-val yes">✓</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r6">Cloud sync multi-device</span>
+        <span >Multi-device cloud sync</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r7">Backup otomatis</span>
+        <span >Automatic backups</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r8">Vault Health Score</span>
+        <span >Vault Health Score</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r9">Encrypted Export</span>
+        <span >Encrypted Export</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r15">Advanced Generator (Bulk)</span>
+        <span >Advanced Generator (Bulk)</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r11">Custom Fields</span>
+        <span >Custom Fields</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r12">Tags &amp; Advanced Filter</span>
+        <span >Tags &amp; Advanced Filter</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row">
-        <span data-i="cmp.r13">Encrypted Share Link</span>
+        <span >Encrypted Share Link</span>
         <span class="c-val no">—</span>
         <span class="c-val yes">✓</span>
       </div>
       <div class="compare-row price-row">
-        <span data-i="cmp.price">Harga</span>
-        <span class="c-val free" data-i="cmp.price.free">Gratis</span>
+        <span >Price</span>
+        <span class="c-val free" >Free</span>
         <span class="c-val pro">$9.99</span>
       </div>
     </div><!-- /.compare -->
@@ -861,36 +892,36 @@
 
     <div><!-- pricing column -->
       <div class="sec-head">
-        <span class="sec-kicker" data-i="price.kicker">/ One-Time Payment</span>
-        <h2 class="sec-title" data-i="price.title">Satu kali bayar. Tidak ada langganan seumur hidup.</h2>
+        <span class="sec-kicker" >/ One-Time Payment</span>
+        <h2 class="sec-title" >Pay once. Never subscribe again.</h2>
       </div>
 
       <div class="price-card">
-      <span class="price-badge" data-i="price.badge">Bayar Sekali — Selamanya</span>
+      <span class="price-badge" >Lifetime · One-Time Payment</span>
       <div class="price-main">
         <span class="big">$9.99</span>
         <span class="usd">USD</span>
       </div>
       <div class="price-strike">
         <span class="price-strike-label">was</span>
-        <s data-i="price.strike">$19.99</s>
-        <span class="price-strike-note" data-i="price.strike.note">one-time only</span>
+        <s >$19.99</s>
+        <span class="price-strike-note" >one-time only</span>
       </div>
 
       <ul class="price-feats">
-        <li><span class="check">✓</span><span data-i="price.f1">Semua fitur Premium, selamanya</span></li>
-        <li><span class="check">✓</span><span data-i="price.f2">Cloud sync end-to-end encrypted</span></li>
-        <li><span class="check">✓</span><span data-i="price.f5">Vault Health Score &amp; audit duplikat</span></li>
-        <li><span class="check">✓</span><span data-i="price.f6">Encrypted Export &amp; password expiry</span></li>
-        <li><span class="check">✓</span><span data-i="price.f7">Custom Fields, Tags &amp; Share Link</span></li>
-        <li><span class="check">✓</span><span data-i="price.f3">Update gratis untuk versi berikutnya</span></li>
-        <li><span class="check">✓</span><span data-i="price.f4">Dukungan email prioritas</span></li>
+        <li><span class="check">✓</span><span >All Premium features, forever</span></li>
+        <li><span class="check">✓</span><span >End-to-end encrypted cloud sync</span></li>
+        <li><span class="check">✓</span><span >Vault Health Score &amp; duplicate audit</span></li>
+        <li><span class="check">✓</span><span >Encrypted Export &amp; password expiry</span></li>
+        <li><span class="check">✓</span><span >Custom Fields, Tags &amp; Share Link</span></li>
+        <li><span class="check">✓</span><span >Free updates for next version</span></li>
+        <li><span class="check">✓</span><span >Priority email support</span></li>
       </ul>
 
       <div class="price-cta">
-        <a href="./upgrade.html" class="btn btn-lg btn-primary btn-block" data-i="price.cta">Buy Now — $9.99</a>
+        <a href="./upgrade.html" class="btn btn-lg btn-primary btn-block" >Buy Now — $9.99</a>
       </div>
-      <p class="price-foot" data-i="price.foot">30 hari garansi uang kembali · Tanpa pertanyaan</p>
+      <p class="price-foot" >30-day money-back guarantee · No questions asked · One-time payment</p>
       </div><!-- /.price-card -->
     </div><!-- /pricing column -->
     </div><!-- /.cmp-price-grid -->
@@ -901,33 +932,33 @@
 <section>
   <div class="wrap">
     <div class="sec-head">
-      <span class="sec-kicker" data-i="faq.kicker">/ Pertanyaan</span>
-      <h2 class="sec-title" data-i="faq.title">Hal-hal yang sering ditanya.</h2>
+      <span class="sec-kicker" >/ Questions</span>
+      <h2 class="sec-title" >Frequently asked.</h2>
     </div>
 
     <div class="faq">
       <details class="faq-item">
         <summary>
-          <span data-i="faq.q1">Data saya aman di mana?</span>
+          <span >Where is my data stored?</span>
           <span class="plus" aria-hidden="true"></span>
         </summary>
-        <div class="faq-body" data-i="faq.a1">Semua data password di-encrypt dengan AES-256-GCM dan disimpan hanya di device kamu. Key enkripsi di-derive dari master password pakai Argon2id — artinya tanpa master password kamu, bahkan kami pun tidak bisa buka vault-nya. Zero-knowledge by design.</div>
+        <div class="faq-body" >All password data is encrypted with AES-256-GCM and stored only on your device. The encryption key is derived from your master password using PBKDF2 — meaning without your master password, not even we can open your vault. Zero-knowledge by design.</div>
       </details>
 
       <details class="faq-item">
         <summary>
-          <span data-i="faq.q2">Apa itu One-Time Payment?</span>
+          <span >What is One-Time Payment?</span>
           <span class="plus" aria-hidden="true"></span>
         </summary>
-        <div class="faq-body" data-i="faq.a2">Kamu bayar sekali $9.99 dan dapat semua fitur Premium selamanya — termasuk update gratis untuk versi berikutnya. Tidak ada tagihan bulanan, tidak ada auto-renew. Kebalikan dari semua password manager berbasis langganan.</div>
+        <div class="faq-body" >You pay $9.99 once and get all Premium features forever — including free updates for the next version. No monthly bills, no auto-renew. The opposite of every other password manager.</div>
       </details>
 
       <details class="faq-item">
         <summary>
-          <span data-i="faq.q3">Bisa digunakan offline?</span>
+          <span >Can I use it offline?</span>
           <span class="plus" aria-hidden="true"></span>
         </summary>
-        <div class="faq-body" data-i="faq.a3">Ya. Hesych 100% berjalan lokal di device kamu — tidak butuh koneksi internet untuk buka vault, generate password, atau isi form otomatis. Cloud sync di versi Premium bersifat opsional dan bisa dimatikan kapan saja.</div>
+        <div class="faq-body" >Yes. Hesych runs 100% locally on your device — no internet needed to open your vault, generate passwords, or autofill forms. Cloud sync on Premium is optional and can be disabled anytime.</div>
       </details>
     </div>
   </div>
@@ -948,222 +979,44 @@
           <span class="brand-tag">© 2026</span>
         </span>
       </div>
-      <a href="./index.html" class="btn btn-sm" data-i="nav.open">Buka Hesych</a>
+      <a href="./index.html" class="btn btn-sm" >Open Hesych</a>
     </div>
-    <div class="foot-note" data-i="foot.note">Zero-knowledge · Data tidak pernah meninggalkan device kamu</div>
+    <div class="foot-note" >Zero-knowledge · Your data never leaves your device · Hesych</div>
   </div>
 </footer>
 
 <!-- ============== TOAST ============== -->
 <div class="toast" id="toast" role="status" aria-live="polite">
   <span class="tick">✓</span>
-  <span id="toastMsg" data-i="toast.success">Kamu berhasil masuk waitlist. Cek inbox ya!</span>
+  <span id="toastMsg" >You're on the waitlist. Check your inbox!</span>
 </div>
 
 <script>
 /* =========================================================
-   i18n
+   Theme toggle
    ========================================================= */
-const STRINGS = {
-  id: {
-    'brand.tag': '· Local-first',
-    'nav.open': 'Buka Hesych',
+const THEME_KEY = 'hesych_theme';
 
-    'hero.badge': 'Password Manager · Enkripsi Lokal · Sekali Bayar',
-    'hero.headline.1': 'Password Manager Paling Aman,',
-    'hero.headline.2': 'Tanpa Langganan.',
-    'hero.sub': 'Enkripsi AES-256 lokal. Tanpa cloud. Bayar sekali, pakai selamanya.',
-    'cta.try': 'Coba Gratis',
-    'cta.buy': 'Beli Sekarang — $9.99',
-    'meta.aes': 'AES-256-GCM',
-    'meta.zk': 'Zero-Knowledge',
-    'meta.open': 'Open Audit',
-
-    'feat.kicker': '/ Fitur Inti',
-    'feat.title': 'Dibangun untuk privasi, bukan profit data.',
-    'feat.aes.t': 'Enkripsi AES-256-GCM',
-    'feat.aes.d': 'Standar militer. Key di-derive dengan Argon2id dari master password kamu.',
-    'feat.hibp.t': 'HIBP Breach Check',
-    'feat.hibp.d': 'Cek password kamu di database pelanggaran — k-anonymity, tanpa kirim password.',
-    'feat.bio.t': 'Biometric Unlock',
-    'feat.bio.d': 'Face ID dan fingerprint. Master password hanya untuk first-run dan re-auth.',
-    'feat.totp.t': 'TOTP / 2FA',
-    'feat.totp.d': 'Simpan kode otentikasi dua-faktor. Auto-fill 6-digit dalam sekali tap.',
-    'feat.offline.t': '100% Offline',
-    'feat.offline.d': 'Tidak ada server. Tidak ada telemetri. Airplane mode? Tetap jalan sempurna.',
-    'feat.sync.t': 'Cloud Sync',
-    'feat.sync.d': 'End-to-end encrypted sync multi-device. Opsional, tidak wajib.',
-    'feat.soon': 'Segera',
-
-    'cmp.kicker': '/ Gratis vs Premium',
-    'cmp.title': 'Pakai gratis selamanya. Upgrade kalau butuh sync.',
-    'cmp.col.feat': 'Fitur',
-    'cmp.col.free': 'Gratis',
-    'cmp.col.pro': 'Premium',
-    'cmp.r1': 'Simpan password lokal',
-    'cmp.r2': 'Enkripsi AES-256-GCM',
-    'cmp.r3': 'Biometric unlock',
-    'cmp.r4': 'HIBP breach check',
-    'cmp.r5': 'TOTP / 2FA storage',
-    'cmp.r6': 'Cloud sync multi-device',
-    'cmp.r7': 'Backup otomatis',
-    'cmp.r8': 'Vault Health Score',
-    'cmp.r9': 'Encrypted Export',
-    'cmp.r10': 'Password Expiry Reminder',
-    'cmp.r14': 'Secret Lock (Sembunyikan Sementara)',
-    'cmp.r15': 'Advanced Generator (Bulk)',
-    'cmp.r11': 'Custom Fields',
-    'cmp.r12': 'Tags & Advanced Filter',
-    'cmp.r13': 'Encrypted Share Link',
-    'cmp.price': 'Harga',
-    'cmp.price.free': 'Gratis',
-
-    'price.kicker': '/ One-Time Payment',
-    'price.title': 'Satu kali bayar. Tidak ada langganan seumur hidup.',
-    'price.badge': 'Lifetime · Bayar Sekali',
-    'price.strike': '$19.99',
-    'price.strike.note': 'bayar sekali saja',
-    'price.f1': 'Semua fitur Premium, selamanya',
-    'price.f2': 'Cloud sync end-to-end encrypted',
-    'price.f3': 'Update gratis untuk versi berikutnya',
-    'price.f4': 'Dukungan email prioritas',
-    'price.f5': 'Vault Health Score & audit duplikat',
-    'price.f6': 'Encrypted Export & password expiry',
-    'price.f7': 'Custom Fields, Tags & Share Link',
-    'price.cta': 'Beli Sekarang — $9.99',
-    'price.foot': '30 hari garansi uang kembali · Tanpa pertanyaan',
-
-    'faq.kicker': '/ Pertanyaan',
-    'faq.title': 'Hal-hal yang sering ditanya.',
-    'faq.q1': 'Data saya aman di mana?',
-    'faq.a1': 'Semua data password di-encrypt dengan AES-256-GCM dan disimpan hanya di device kamu. Key enkripsi di-derive dari master password pakai Argon2id — artinya tanpa master password kamu, bahkan kami pun tidak bisa buka vault-nya. Zero-knowledge by design.',
-    'faq.q2': 'Apa itu One-Time Payment?',
-    'faq.a2': 'Kamu bayar sekali $9.99 dan dapat semua fitur Premium selamanya — termasuk update gratis untuk versi berikutnya. Tidak ada tagihan bulanan, tidak ada auto-renew. Kebalikan dari semua password manager berbasis langganan.',
-    'faq.q3': 'Bisa digunakan offline?',
-    'faq.a3': 'Ya. Hesych 100% berjalan lokal di device kamu — tidak butuh koneksi internet untuk buka vault, generate password, atau isi form otomatis. Cloud sync di versi Premium bersifat opsional dan bisa dimatikan kapan saja.',
-
-    'foot.note': 'Zero-knowledge · Data tidak pernah meninggalkan device kamu · Hesych',
-
-    'modal.title': 'Daftar Waitlist Premium',
-    'modal.sub': 'Dapatkan early access + harga peluncuran $7.99 (hemat $2). Slot terbatas.',
-    'modal.email': 'Email kamu',
-    'modal.cta': 'Daftar Waitlist',
-    'modal.fine': 'Tidak ada spam · Unsubscribe kapan saja',
-    'toast.success': 'Kamu berhasil masuk waitlist. Cek inbox ya!'
-  },
-  en: {
-    'brand.tag': '· Local-first',
-    'nav.open': 'Open Hesych',
-
-    'hero.badge': 'Password Manager · Local Encryption · One-Time Payment',
-    'hero.headline.1': 'The Most Secure Password Manager.',
-    'hero.headline.2': 'No Subscription.',
-    'hero.sub': 'Local AES-256 encryption. No cloud. Pay once, yours forever.',
-    'cta.try': 'Try Free',
-    'cta.buy': 'Buy Now — $9.99',
-    'meta.aes': 'AES-256-GCM',
-    'meta.zk': 'Zero-Knowledge',
-    'meta.open': 'Open Audit',
-
-    'feat.kicker': '/ Core Features',
-    'feat.title': 'Built for privacy, not data profit.',
-    'feat.aes.t': 'AES-256-GCM Encryption',
-    'feat.aes.d': 'Military-grade standard. Keys derived with Argon2id from your master password.',
-    'feat.hibp.t': 'HIBP Breach Check',
-    'feat.hibp.d': 'Check your passwords against breach databases — k-anonymity, never sends your password.',
-    'feat.bio.t': 'Biometric Unlock',
-    'feat.bio.d': 'Face ID and fingerprint. Master password only needed for first-run and re-auth.',
-    'feat.totp.t': 'TOTP / 2FA',
-    'feat.totp.d': 'Store two-factor codes. Auto-fill 6-digit codes in one tap.',
-    'feat.offline.t': '100% Offline',
-    'feat.offline.d': 'No servers. No telemetry. Airplane mode? Works perfectly.',
-    'feat.sync.t': 'Cloud Sync',
-    'feat.sync.d': 'End-to-end encrypted multi-device sync. Optional, never required.',
-    'feat.soon': 'Soon',
-
-    'cmp.kicker': '/ Free vs Premium',
-    'cmp.title': 'Free forever. Upgrade only if you need sync.',
-    'cmp.col.feat': 'Feature',
-    'cmp.col.free': 'Free',
-    'cmp.col.pro': 'Premium',
-    'cmp.r1': 'Store passwords locally',
-    'cmp.r2': 'AES-256-GCM encryption',
-    'cmp.r3': 'Biometric unlock',
-    'cmp.r4': 'HIBP breach check',
-    'cmp.r5': 'TOTP / 2FA storage',
-    'cmp.r6': 'Multi-device cloud sync',
-    'cmp.r7': 'Automatic backups',
-    'cmp.r8': 'Vault Health Score',
-    'cmp.r9': 'Encrypted Export',
-    'cmp.r10': 'Password Expiry Reminder',
-    'cmp.r14': 'Secret Lock (Hide for a While)',
-    'cmp.r15': 'Advanced Generator (Bulk)',
-    'cmp.r11': 'Custom Fields',
-    'cmp.r12': 'Tags & Advanced Filter',
-    'cmp.r13': 'Encrypted Share Link',
-    'cmp.price': 'Price',
-    'cmp.price.free': 'Free',
-
-    'price.kicker': '/ One-Time Payment',
-    'price.title': 'Pay once. Never subscribe again.',
-    'price.badge': 'Lifetime · One-Time Payment',
-    'price.strike': '$19.99',
-    'price.strike.note': 'one-time only',
-    'price.f1': 'All Premium features, forever',
-    'price.f2': 'End-to-end encrypted cloud sync',
-    'price.f3': 'Free updates for next version',
-    'price.f4': 'Priority email support',
-    'price.f5': 'Vault Health Score & duplicate audit',
-    'price.f6': 'Encrypted Export & password expiry',
-    'price.f7': 'Custom Fields, Tags & Share Link',
-    'price.cta': 'Buy Now — $9.99',
-    'price.foot': '30-day money-back guarantee · No questions asked · One-time payment',
-
-    'faq.kicker': '/ Questions',
-    'faq.title': 'Frequently asked.',
-    'faq.q1': 'Where is my data stored?',
-    'faq.a1': 'All password data is encrypted with AES-256-GCM and stored only on your device. The encryption key is derived from your master password using Argon2id — meaning without your master password, not even we can open your Hesych vault. Zero-knowledge by design.',
-    'faq.q2': 'What is One-Time Payment?',
-    'faq.a2': 'You pay $9.99 once and get all Premium features forever — including free updates for the next version. No monthly bills, no auto-renew. The opposite of every other password manager.',
-    'faq.q3': 'Can I use it offline?',
-    'faq.a3': 'Yes. Hesych runs 100% locally on your device — no internet connection needed to open your vault, generate passwords, or autofill forms. Cloud sync on Premium is optional and can be disabled anytime.',
-
-    'foot.note': 'Zero-knowledge · Your data never leaves your device · Hesych',
-
-    'modal.title': 'Join the Premium Waitlist',
-    'modal.sub': 'Get early access + launch pricing at $7.99 (save $2). Limited spots.',
-    'modal.email': 'Your email',
-    'modal.cta': 'Join Waitlist',
-    'modal.fine': 'No spam · Unsubscribe anytime',
-    'toast.success': "You're on the waitlist. Check your inbox!"
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('themeIcon');
+  if (theme === 'light') {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   }
-};
-
-let lang = localStorage.getItem('hesych_lang')
-  || 'en';
-
-function t(key) { return STRINGS[lang][key] || key; }
-
-function applyLang() {
-  document.documentElement.lang = lang;
-  document.querySelectorAll('[data-i]').forEach(el => {
-    el.textContent = t(el.dataset.i);
-  });
-  // reflect toggle state
-  document.querySelectorAll('.lang-toggle button').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === lang);
-  });
 }
 
-document.querySelectorAll('.lang-toggle button').forEach(b => {
-  b.addEventListener('click', () => {
-    lang = b.dataset.lang;
-    localStorage.setItem('hesych_lang', lang);
-    applyLang();
-  });
-});
+const savedTheme = localStorage.getItem(THEME_KEY)
+  || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+applyTheme(savedTheme);
 
-applyLang();
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
 
 /* =========================================================
    Buy Now buttons → redirect to upgrade.html
@@ -1173,9 +1026,6 @@ document.querySelectorAll('[data-modal]').forEach(b => {
     e.preventDefault();
     window.location.href = './upgrade.html';
   });
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {} // no-op, modal removed
 });
 </script>
 </body>
