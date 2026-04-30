@@ -1355,6 +1355,49 @@ svg{display:block;flex-shrink:0}
   background:var(--card);border:1px solid var(--border);
 }
 .hist-entry:hover{ border-color:var(--accent-dim); }
+/* Share Log */
+.share-log-section{
+  margin-top:18px;padding-top:16px;
+  border-top:1px solid var(--border);
+}
+.share-log-header{
+  font-size:11px;font-family:var(--mono);color:var(--dim);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;
+}
+.share-log-empty{
+  font-size:12px;color:var(--dim);text-align:center;
+  padding:14px 0;font-family:var(--mono);
+}
+.share-log-item{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 11px;border-radius:9px;
+  background:var(--surface);border:1px solid var(--border);
+  margin-bottom:7px;
+}
+.share-log-item:last-child{ margin-bottom:0 }
+.share-log-info{ flex:1;min-width:0 }
+.share-log-title{
+  font-size:12px;font-weight:500;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:2px;
+}
+.share-log-meta{
+  font-size:10px;font-family:var(--mono);color:var(--sub);
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+}
+.share-log-dot{
+  width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;
+}
+.share-log-dot.expired{ background:var(--dim) }
+.share-log-dot.warn{ background:var(--warn) }
+.share-log-actions{ display:flex;gap:4px;align-items:center;flex-shrink:0 }
+.share-log-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--dim);padding:5px;border-radius:6px;
+  display:flex;align-items:center;transition:all .15s;
+}
+.share-log-btn:hover{ background:var(--card-hover);color:var(--text) }
+.share-log-btn.danger:hover{ color:var(--danger) }
 [data-theme="light"] .share-include-chip{
   background:#dcfce7;border:1px solid #86efac;color:#15803d;
 }
@@ -3003,6 +3046,11 @@ const STRINGS = {
     'share.unlock':'View Password',
     'share.unlockBtn':'Unlock',
     'share.viewerTitle':'Shared Item',
+    'share.logTitle':'Share History',
+    'share.logEmpty':'No links generated yet.',
+    'share.logExpired':'Expired',
+    'share.logActive':'Active',
+    'share.logCopied':'Link copied!',
 };
 
 function t(key, vars) {
@@ -3080,9 +3128,10 @@ const SVG = {
 
 // ===== CONFIG =====
 const DB_NAME = 'VaultDB';
-const DB_VER = 4;
+const DB_VER = 5;
 const STORE = 'items';
 const HIST_STORE = 'pw_history';
+const SHARE_LOG_STORE = 'share_log';
 const HIST_MAX = 10;
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 30000;
@@ -3133,6 +3182,11 @@ function openDB(){
       if(!d.objectStoreNames.contains(HIST_STORE)){
         const hs = d.createObjectStore(HIST_STORE, {keyPath:'hid', autoIncrement:true});
         hs.createIndex('itemId', 'itemId', {unique:false});
+      }
+      // v5: share link log
+      if(!d.objectStoreNames.contains(SHARE_LOG_STORE)){
+        const sl = d.createObjectStore(SHARE_LOG_STORE, {keyPath:'slid', autoIncrement:true});
+        sl.createIndex('itemId', 'itemId', {unique:false});
       }
     };
     req.onsuccess = e => res(e.target.result);
@@ -5458,6 +5512,109 @@ function clearTotpField(){
   if(btn) btn.style.display='none';
 }
 
+// ===== SHARE LOG DB =====
+function shareLogAdd(entry){
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(SHARE_LOG_STORE,'readwrite');
+    const req = tx.objectStore(SHARE_LOG_STORE).add(entry);
+    req.onsuccess = ()=>res(req.result);
+    req.onerror = ()=>rej(req.error);
+  });
+}
+function shareLogAll(){
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(SHARE_LOG_STORE,'readonly');
+    const req = tx.objectStore(SHARE_LOG_STORE).getAll();
+    req.onsuccess = ()=>res(req.result.reverse()); // newest first
+    req.onerror = ()=>rej(req.error);
+  });
+}
+function shareLogDelete(slid){
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(SHARE_LOG_STORE,'readwrite');
+    const req = tx.objectStore(SHARE_LOG_STORE).delete(slid);
+    req.onsuccess = ()=>res();
+    req.onerror = ()=>rej(req.error);
+  });
+}
+
+function formatShareExpiry(expTs){
+  const rem = expTs - Date.now();
+  if(rem <= 0) return { label: t('share.logExpired'), expired: true, warn: false };
+  const hrs = Math.floor(rem / 3600000);
+  const mins = Math.floor((rem % 3600000) / 60000);
+  const warn = rem < 3600000;
+  if(hrs >= 24){
+    const days = Math.floor(hrs/24);
+    return { label: `${days}d left`, expired: false, warn };
+  }
+  if(hrs > 0) return { label: `${hrs}h ${mins}m left`, expired: false, warn };
+  return { label: `${mins}m left`, expired: false, warn: true };
+}
+
+function formatShareCreated(ts){
+  const d = new Date(ts);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  if(isToday) return `Today ${time}`;
+  return d.toLocaleDateString([], {month:'short', day:'numeric'}) + ` ${time}`;
+}
+
+async function renderShareLog(containerId){
+  const wrap = document.getElementById(containerId);
+  if(!wrap) return;
+  wrap.innerHTML = `<div class="share-log-empty" style="color:var(--dim);font-size:12px">Loading…</div>`;
+  let logs = [];
+  try{ logs = await shareLogAll(); }catch(e){}
+  if(!logs.length){
+    wrap.innerHTML = `<div class="share-log-empty">${t('share.logEmpty')}</div>`;
+    return;
+  }
+  wrap.innerHTML = logs.map(log=>{
+    const exp = formatShareExpiry(log.expTs);
+    const dotCls = exp.expired ? 'share-log-dot expired' : exp.warn ? 'share-log-dot warn' : 'share-log-dot';
+    return `<div class="share-log-item" id="sli-${log.slid}">
+      <span class="${dotCls}"></span>
+      <div class="share-log-info">
+        <div class="share-log-title">${esc(log.itemTitle)}</div>
+        <div class="share-log-meta">
+          <span>${formatShareCreated(log.createdAt)}</span>
+          <span>·</span>
+          <span style="color:${exp.expired?'var(--dim)':exp.warn?'var(--warn)':'var(--green)'}">${exp.label}</span>
+        </div>
+      </div>
+      <div class="share-log-actions">
+        ${!exp.expired ? `
+        <button class="share-log-btn" title="Copy link" onclick="copyShareLogLink(${log.slid})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>` : ''}
+        <button class="share-log-btn danger" title="Delete" onclick="deleteShareLog(${log.slid},'${containerId}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function copyShareLogLink(slid){
+  try{
+    const tx = db.transaction(SHARE_LOG_STORE,'readonly');
+    const req = tx.objectStore(SHARE_LOG_STORE).get(slid);
+    req.onsuccess = async ()=>{
+      const log = req.result;
+      if(!log) return;
+      await navigator.clipboard.writeText(log.link);
+      showToast(t('share.logCopied'),'ok');
+    };
+  }catch(e){}
+}
+
+async function deleteShareLog(slid, containerId){
+  await shareLogDelete(slid);
+  renderShareLog(containerId);
+}
+
 // ===== ENCRYPTED SHARE LINK =====
 let _shareState = { itemId: null, expiry: 86400000, generatedLink: null };
 
@@ -5563,7 +5720,12 @@ function renderShareForm(){
         ${t('share.generateBtn')}
       </button>
       <button class="btn-cancel" style="width:100%;margin-top:8px" onclick="closeShareSheet()">Cancel</button>
-    `}`;
+    `}
+    <div class="share-log-section">
+      <div class="share-log-header">${t('share.logTitle')}</div>
+      <div id="shareLogContainer"></div>
+    </div>`;
+  renderShareLog('shareLogContainer');
 }
 
 async function doGenerateShareLink(){
@@ -5603,6 +5765,16 @@ async function doGenerateShareLink(){
     };
     const base = window.location.href.replace(/[^/]*$/,'');
     _shareState.generatedLink = `${base}share.html#${btoa(JSON.stringify(bundle))}`;
+    // Save to share log
+    try{
+      await shareLogAdd({
+        itemId: item.id,
+        itemTitle: item.title,
+        link: _shareState.generatedLink,
+        createdAt: Date.now(),
+        expTs: payload.exp,
+      });
+    }catch(e){}
     renderShareForm();
   }catch(e){
     if(msg) msg.textContent = e.message;
