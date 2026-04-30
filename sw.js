@@ -3,11 +3,11 @@
 
 // BUMP versi ini setiap kali deploy agar cache lama otomatis dihapus
 // Format: 'hesych-v{major}.{minor}' — contoh: v1.1, v1.2, v2.0
-const CACHE_NAME = 'hesych-v1.0';
+const CACHE_NAME = 'hesych-v1.1';
 
 const ASSETS = [
   '/',
-  '/index.html',
+  '/app.html',
   '/landing.html',
   '/upgrade.html',
   '/share.html',
@@ -60,7 +60,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           return response;
         })
-        .catch(() => caches.match(event.request) || caches.match('/index.html'))
+        .catch(() => caches.match(event.request) || caches.match('/app.html'))
     );
   } else {
     // Cache-first untuk assets (icon, gambar, manifest)
@@ -75,7 +75,7 @@ self.addEventListener('fetch', event => {
           return response;
         }).catch(() => {
           if (event.request.destination === 'document') {
-            return caches.match('/index.html');
+            return caches.match('/app.html');
           }
         });
       })

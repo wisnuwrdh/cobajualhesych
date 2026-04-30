@@ -2,13 +2,16 @@
   "name": "Hesych",
   "short_name": "Hesych",
   "description": "Local-first password manager. AES-256-GCM encrypted. One-time payment, lifetime access.",
-  "start_url": "/",
+  "start_url": "/app.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0c",
   "theme_color": "#0a0a0c",
-  "categories": ["productivity", "utilities"],
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
