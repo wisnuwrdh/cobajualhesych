@@ -16,6 +16,10 @@
 <meta name="twitter:title" content="Hesych — Local-First Password Manager, $9.99 Lifetime">
 <meta name="twitter:description" content="AES-256-GCM encrypted password manager. One-time payment $9.99. No subscription, no cloud, your data never leaves your device.">
 <meta name="twitter:image" content="https://hesych.com/og-image.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="shortcut icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="canonical" href="https://hesych.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1145,6 +1149,11 @@
 </div>
 
 <script>
+/* Redirect ke app.html kalau dibuka sebagai PWA installed */
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  window.location.replace('./app.html');
+}
+
 /* Apply theme from system preference */
 if (window.matchMedia('(prefers-color-scheme: light)').matches) {
   document.documentElement.setAttribute('data-theme', 'light');
