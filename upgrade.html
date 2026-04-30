@@ -17,6 +17,20 @@
   --green:#00c896;--warn:#f0a000;
   --radius:10px;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
 }
+[data-theme="light"]{
+  --bg:#f5f5f7;--surface:#ffffff;--card:#ffffff;
+  --border:#e0e0e8;--border-focus:#b0b0c8;
+  --text:#111118;--sub:#666674;--dim:#aaaabc;
+  --accent:#7c6af7;--accent-glow:rgba(124,106,247,0.08);--accent-dim:#ebe8ff;
+  --green:#009970;--warn:#c07800;
+}
+[data-theme="light"] body{
+  background:radial-gradient(ellipse 600px 500px at 50% 0%, rgba(124,106,247,0.06) 0%, transparent 70%), var(--bg);
+}
+[data-theme="light"] body::before{ display:none }
+[data-theme="light"] .compare-table td{
+  border-bottom-color:rgba(224,224,232,0.6);
+}
 html{scroll-behavior:smooth}
 body{
   font-family:var(--sans);background:var(--bg);color:var(--text);
@@ -155,39 +169,6 @@ body::before{
 .cross{color:var(--dim);font-size:16px}
 .td-free{color:var(--sub)}
 .td-pro{color:var(--accent);font-weight:500}
-
-/* ── HAVE KEY ── */
-.have-key{
-  text-align:center;font-size:12px;color:var(--sub);margin-bottom:24px;
-}
-.have-key a{color:var(--accent);text-decoration:none}
-.have-key a:hover{text-decoration:underline}
-
-/* ── LICENSE INPUT (inline) ── */
-.key-form{display:none;margin-bottom:16px}
-.key-form.open{display:block}
-.key-input-wrap{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:12px 14px;margin-bottom:10px;
-  transition:border-color .15s;
-}
-.key-input-wrap:focus-within{border-color:var(--border-focus)}
-.key-input-label{font-size:10px;color:var(--sub);font-family:var(--mono);margin-bottom:6px;letter-spacing:.05em}
-.key-input{
-  width:100%;background:transparent;border:none;outline:none;
-  font-family:var(--mono);font-size:12px;color:var(--text);
-  letter-spacing:.02em;
-}
-.key-input::placeholder{color:var(--dim)}
-.btn-activate{
-  width:100%;padding:11px;border-radius:8px;
-  background:var(--accent-dim);border:1px solid rgba(124,106,247,0.3);
-  color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:500;
-  cursor:pointer;transition:background .15s;
-}
-.btn-activate:hover{background:rgba(124,106,247,0.2)}
-.key-error{font-size:12px;color:#f05;margin-top:8px;text-align:center;display:none}
-.key-loading{opacity:.6;pointer-events:none}
 
 /* ── TOAST ── */
 .toast{
@@ -379,20 +360,6 @@ body::before{
       </table>
     </div>
 
-    <!-- Have a key -->
-    <div class="have-key">
-      Already purchased? <a href="#" onclick="toggleKeyForm(event)">Enter your license key</a>
-    </div>
-
-    <div class="key-form" id="keyForm">
-      <div class="key-input-wrap">
-        <div class="key-input-label">LICENSE KEY</div>
-        <input class="key-input" id="licenseInput" type="text" placeholder="eyJ..." autocomplete="off" spellcheck="false">
-      </div>
-      <button class="btn-activate" id="activateBtn" onclick="handleActivate()">Activate License</button>
-      <div class="key-error" id="keyError">Invalid or expired license key.</div>
-    </div>
-
   </div><!-- /buySection -->
 
 </div><!-- /wrap -->
@@ -400,9 +367,13 @@ body::before{
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Config — replace with your actual Lemon Squeezy checkout URL ──────────
+// ── Apply theme from system preference ───────────────────────────────────────
+if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
 const LEMON_CHECKOUT_URL = 'https://hesych-app.lemonsqueezy.com/checkout/buy/78a7c1a0-313d-4f2f-828e-ffb42a153780';
-// ─────────────────────────────────────────────────────────────────────────────
 
 function handleBuy(e) {
   e.preventDefault();
@@ -416,57 +387,6 @@ function toggleCompare() {
   table.classList.toggle('open');
 }
 
-function toggleKeyForm(e) {
-  e.preventDefault();
-  document.getElementById('keyForm').classList.toggle('open');
-  if (document.getElementById('keyForm').classList.contains('open')) {
-    setTimeout(() => document.getElementById('licenseInput').focus(), 100);
-  }
-}
-
-async function handleActivate() {
-  const input = document.getElementById('licenseInput');
-  const btn = document.getElementById('activateBtn');
-  const err = document.getElementById('keyError');
-  const key = input.value.trim();
-
-  if (!key) return;
-
-  err.style.display = 'none';
-  btn.textContent = 'Verifying…';
-  btn.classList.add('key-loading');
-
-  try {
-    const res = await fetch('/api/verify-license', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ license: key }),
-    });
-    const data = await res.json();
-
-    if (data.valid) {
-      // Save to localStorage (same keys as index.html)
-      localStorage.setItem('vault_license', key);
-      localStorage.setItem('vault_license_verified', '1');
-      localStorage.setItem('vault_license_at', Date.now().toString());
-
-      // Show activated state
-      document.getElementById('buySection').classList.add('hide');
-      document.getElementById('activatedCard').classList.add('show');
-      showToast('🎉 Premium activated!', 'success');
-    } else {
-      err.style.display = 'block';
-      btn.textContent = 'Activate License';
-      btn.classList.remove('key-loading');
-    }
-  } catch {
-    err.textContent = 'Connection error. Please try again.';
-    err.style.display = 'block';
-    btn.textContent = 'Activate License';
-    btn.classList.remove('key-loading');
-  }
-}
-
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -474,21 +394,6 @@ function showToast(msg, type = '') {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
-
-// Handle license key passed via URL param (e.g. from email link)
-const urlParams = new URLSearchParams(window.location.search);
-const keyFromUrl = urlParams.get('key');
-if (keyFromUrl) {
-  document.getElementById('keyForm').classList.add('open');
-  document.getElementById('licenseInput').value = keyFromUrl;
-}
-
-// Enter key to activate
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('keyForm').classList.contains('open')) {
-    handleActivate();
-  }
-});
 </script>
 </body>
 </html>
