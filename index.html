@@ -4119,6 +4119,39 @@ async function openDetailPanel(id){
       <div class="detail-panel-label">2FA / TOTP</div>
       <div class="detail-panel-value">Loading…</div>
     </div>` : ''}
+    ${item.tags && item.tags.length ? `
+    <div class="detail-panel-row">
+      <div class="detail-panel-label">${t('tags.label')}</div>
+      <div class="tag-list" style="margin-top:2px">
+        ${item.tags.map(tag=>`<span class="tag-chip">#${esc(tag)}</span>`).join('')}
+      </div>
+    </div>` : ''}
+    ${item.custom_fields && item.custom_fields.length ? `
+    <div class="detail-panel-row">
+      <div class="detail-panel-label">${t('cf.label')}</div>
+      <div class="cf-list" id="cf-list-dp-${id}" style="margin-top:4px">
+        ${item.custom_fields.map((f,i)=>`
+          <div class="cf-item">
+            <div class="cf-item-header">
+              <span class="cf-item-name">${esc(f.name)}</span>
+            </div>
+            <div class="cf-item-value-row">
+              <span class="cf-item-value${f.type==='password'?' hidden':''}" id="cf-val-dp-${id}-${i}">
+                ${f.type==='password'?'••••••••':'(loading…)'}
+              </span>
+              <div class="cf-item-actions">
+                ${f.type==='password'?`
+                  <button class="cf-item-btn" onclick="toggleCFRevealDP(${id},${i})" title="${t('cf.showField')}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>`:''}
+                <button class="cf-item-btn" onclick="copyCFValueDP(${id},${i})" title="${t('cf.copyField')}">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
     <div class="detail-panel-actions">
       <button class="detail-panel-btn" onclick="copyPass(${id})">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -4153,6 +4186,10 @@ async function openDetailPanel(id){
 
   if(item.totp_secret){
     setTimeout(()=>mountTotpBlock(id, `dp-totp-\${id}`), 100);
+  }
+  if(item.custom_fields && item.custom_fields.length){
+    setTimeout(()=>mountCFValuesDP(id), 80);
+    setTimeout(()=>mountCFValuesDP(id), 400);
   }
 }
 
@@ -5820,6 +5857,57 @@ async function mountCFValues(itemId){
       }
     }catch(e){ el.textContent = '—'; }
   }
+}
+
+async function mountCFValuesDP(itemId){
+  const item = _items.find(i=>i.id===itemId);
+  if(!item || !item.custom_fields) return;
+  for(let i=0;i<item.custom_fields.length;i++){
+    const f = item.custom_fields[i];
+    const el = document.getElementById(`cf-val-dp-${itemId}-${i}`);
+    if(!el) continue;
+    try{
+      const val = await decrypt(f.value||'');
+      el.dataset.plain = val;
+      if(f.type==='password'){
+        if(!_cfRevealed.has(`dp-${itemId}-${i}`)){
+          el.textContent = '••••••••';
+          el.classList.add('hidden');
+        } else {
+          el.textContent = val || '—';
+          el.classList.remove('hidden');
+        }
+      } else {
+        el.textContent = val || '—';
+        el.classList.remove('hidden');
+      }
+    }catch(e){ el.textContent = '—'; }
+  }
+}
+
+function toggleCFRevealDP(itemId, idx){
+  const key = `dp-${itemId}-${idx}`;
+  const el = document.getElementById(`cf-val-dp-${itemId}-${idx}`);
+  if(!el) return;
+  if(_cfRevealed.has(key)){
+    _cfRevealed.delete(key);
+    el.textContent = '••••••••';
+    el.classList.add('hidden');
+  } else {
+    _cfRevealed.add(key);
+    el.textContent = el.dataset.plain || '—';
+    el.classList.remove('hidden');
+  }
+}
+
+async function copyCFValueDP(itemId, idx){
+  const item = _items.find(i=>i.id===itemId);
+  if(!item || !item.custom_fields || !item.custom_fields[idx]) return;
+  try{
+    const val = await decrypt(item.custom_fields[idx].value||'');
+    await navigator.clipboard.writeText(val);
+    showToast(t('toast.copied'));
+  }catch(e){ showToast('Copy failed','err'); }
 }
 
 function toggleCFReveal(itemId, idx){
