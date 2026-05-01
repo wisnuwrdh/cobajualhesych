@@ -1915,6 +1915,10 @@ svg{display:block;flex-shrink:0}
     color: var(--sub);
     display: flex; align-items: center; gap: 8px;
   }
+  .detail-panel-value > span:first-child {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .detail-panel-value.revealed { color: var(--text); }
   .detail-panel-copy {
     margin-left: auto;
