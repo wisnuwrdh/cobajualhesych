@@ -2226,10 +2226,6 @@ svg{display:block;flex-shrink:0}
       <button class="icon-btn" id="bioToggleBtn" onclick="toggleBiometric()" style="display:none">
         <svg width="15" height="15" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.7,37.3V21.9a7.7,7.7,0,0,0-15.4,0V37.3a10.7,10.7,0,0,0,4,8.3,1.8,1.8,0,0,0,.9.4,1.4,1.4,0,0,0,1.2-.6,1.5,1.5,0,0,0-.2-2.2,7.4,7.4,0,0,1-2.8-5.9V21.9a4.6,4.6,0,0,1,9.2,0V37.3a1.5,1.5,0,0,1-1.5,1.5,1.6,1.6,0,0,1-1.6-1.5V21.9a1.5,1.5,0,0,0-3,0V37.6a4.6,4.6,0,0,0,4.6,4.3,4.7,4.7,0,0,0,4.6-4.3Z" fill="currentColor"/><path d="M24,8.1A13.8,13.8,0,0,0,10.2,21.9V37.3a17,17,0,0,0,1.9,7.9,1.6,1.6,0,0,0,1.4.8l.7-.2a1.6,1.6,0,0,0,.6-2.1,14.1,14.1,0,0,1-1.6-6.4V21.9a10.8,10.8,0,0,1,21.6,0V37.3a7.9,7.9,0,0,1-2.9,6,1.4,1.4,0,0,0-.2,2.1,1.4,1.4,0,0,0,1.2.6,1.6,1.6,0,0,0,.9-.3,10.6,10.6,0,0,0,4-8.4V21.9A13.8,13.8,0,0,0,24,8.1Z" fill="currentColor"/><path d="M24,2A20,20,0,0,0,4,21.9V40.4a1.5,1.5,0,0,0,1.5,1.5,1.6,1.6,0,0,0,1.6-1.5V21.9a16.9,16.9,0,0,1,33.8,0V37.3a12.9,12.9,0,0,1-1.6,6.4,1.5,1.5,0,0,0,.7,2.1l.7.2a1.4,1.4,0,0,0,1.3-.8A16.5,16.5,0,0,0,44,38V21.9A20,20,0,0,0,24,2Z" fill="currentColor"/></svg>
       </button>
-      <!-- Cloud Sync -->
-      <button class="icon-btn" id="syncBtn" onclick="manualSync()" title="Sync vault" style="display:none">
-        <svg id="syncIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      </button>
       <!-- Lock -->
       <button class="icon-btn" onclick="lockVault()" data-i18n-title="app.lockTitle">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -2257,6 +2253,10 @@ svg{display:block;flex-shrink:0}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             <span data-i18n="health.title">Vault Health</span>
             <span class="premium-badge" style="margin-left:auto;font-size:8px">PRO</span>
+          </button>
+          <button class="overflow-item" onclick="manualSync();closeOverflow()" id="syncMenuItem" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span id="syncMenuLabel">Sync Vault</span>
           </button>
           <button class="overflow-item" onclick="openLicenseSheet();closeOverflow()" id="licenseMenuItem">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -7068,12 +7068,84 @@ async function doActivateLicense(){
     showToast(t('premium.activated'), 'ok');
     renderLicenseSheet();
   } else {
-    const errMsg = result.deviceLimitReached
-      ? 'Device limit reached (max 3). Remove license from another device first.'
-      : (result.error || t('premium.invalidKey'));
-    if(msg) msg.textContent = errMsg;
-    if(input) input.style.borderColor = 'var(--danger)';
-    if(btn){ btn.disabled=false; btn.textContent=t('premium.activateBtn'); }
+    if(result.deviceLimitReached){
+      if(msg) msg.textContent = 'Device limit reached (max 3).';
+      if(input) input.style.borderColor = 'var(--danger)';
+      if(btn){ btn.disabled=false; btn.textContent=t('premium.activateBtn'); }
+      // Tampilkan tombol "lost access"
+      const existing = document.getElementById('lostAccessBtn');
+      if(!existing){
+        const lostBtn = document.createElement('button');
+        lostBtn.id = 'lostAccessBtn';
+        lostBtn.className = 'btn-deactivate';
+        lostBtn.style.cssText = 'width:100%;padding:10px;justify-content:center;display:flex;margin-top:8px;font-size:12px';
+        lostBtn.textContent = 'I lost access to a device — replace it';
+        lostBtn.onclick = () => showReplaceDeviceUI(input.value.trim(), result.devices);
+        btn.parentNode.insertBefore(lostBtn, btn.nextSibling);
+      }
+    } else {
+      const errMsg = result.error || t('premium.invalidKey');
+      if(msg) msg.textContent = errMsg;
+      if(input) input.style.borderColor = 'var(--danger)';
+      if(btn){ btn.disabled=false; btn.textContent=t('premium.activateBtn'); }
+    }
+  }
+}
+
+async function showReplaceDeviceUI(licenseKey, devices){
+  if(!licenseKey) return;
+  // Fetch device list jika belum ada
+  let deviceList = devices;
+  if(!deviceList){
+    try{
+      const res = await fetch('/api/verify-license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ license: licenseKey, deviceId: getDeviceId(), action: 'list' })
+      });
+      const data = await res.json();
+      deviceList = data.devices || [];
+    }catch(e){ deviceList = []; }
+  }
+
+  const body = document.getElementById('licenseSheetBody');
+  if(!body) return;
+  body.innerHTML = `
+    <p style="font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.6">
+      Select the device you no longer have access to. It will be replaced by this device.
+    </p>
+    <div id="replaceDeviceList">
+      ${deviceList.map(d => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card)">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${d.device_name || 'Unknown Device'}</div>
+            <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:2px">${d.activated_at ? new Date(d.activated_at).toLocaleDateString() : ''}</div>
+          </div>
+          <button onclick="replaceDevice('${licenseKey}','${d.device_id}')" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--danger);background:none;color:var(--danger);cursor:pointer;font-family:var(--sans)">Replace</button>
+        </div>
+      `).join('')}
+    </div>
+    <button onclick="renderLicenseSheet()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--sub);cursor:pointer;font-family:var(--sans);font-size:13px">Cancel</button>
+  `;
+}
+
+async function replaceDevice(licenseKey, oldDeviceId){
+  // Hapus device lama
+  try{
+    await fetch('/api/verify-license', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license: licenseKey, deviceId: oldDeviceId, action: 'remove' })
+    });
+  }catch(e){}
+  // Aktivasi device baru
+  const result = await activateLicense(licenseKey);
+  if(result.ok){
+    showToast('Device replaced successfully', 'ok');
+    renderLicenseSheet();
+  } else {
+    showToast('Failed to activate. Try again.', 'error');
+    renderLicenseSheet();
   }
 }
 
@@ -7218,11 +7290,11 @@ async function runVaultHealth(){
 const _SYNC_TS_KEY = 'hesych_sync_ts';
 let _syncInProgress = false;
 
-function getSyncBtn(){ return document.getElementById('syncBtn'); }
-function getSyncIcon(){ return document.getElementById('syncIcon'); }
+function getSyncBtn(){ return document.getElementById('syncMenuItem'); }
+function getSyncIcon(){ return document.getElementById('syncMenuItem')?.querySelector('svg'); }
 
 function updateSyncUI(){
-  const btn = getSyncBtn();
+  const btn = document.getElementById('syncMenuItem');
   if(!btn) return;
   btn.style.display = isPremium() ? 'flex' : 'none';
 }
@@ -7383,6 +7455,13 @@ async function autoUpload(){
 // Auto-download saat pertama unlock (kalau premium)
 async function syncOnUnlock(){
   if(!isPremium()) return;
+  // Tampilkan hint di lock screen
+  const lockSub = document.getElementById('lockSub');
+  if(lockSub && !isFirstTime()){
+    const original = lockSub.textContent;
+    lockSub.textContent = 'Enter your master password — use the same password as your other device if syncing';
+    setTimeout(()=>{ if(lockSub) lockSub.textContent = original; }, 5000);
+  }
   setSyncSpinning(true);
   try{
     const cloudData = await downloadVault();
@@ -7396,6 +7475,10 @@ async function syncOnUnlock(){
         render();
         showToast('Vault synced from cloud', 'ok');
         localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
+        // Info master password
+        setTimeout(()=>{
+          showToast('Use the same master password as your other device', 'warn');
+        }, 2500);
       }
     }
   }catch(e){}
