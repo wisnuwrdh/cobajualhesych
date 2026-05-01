@@ -7316,7 +7316,8 @@ async function encryptVaultForSync(){
   // Ambil semua raw items dari IndexedDB (masih encrypted)
   const raw = await dbAll();
   const salt = localStorage.getItem('vault_salt') || '';
-  const payload = JSON.stringify({ v: 1, salt, items: raw, ts: Date.now() });
+  const ver = localStorage.getItem('vault_ver') || '';
+  const payload = JSON.stringify({ v: 1, salt, ver, items: raw, ts: Date.now() });
   return payload;
 }
 
@@ -7392,8 +7393,9 @@ async function applyCloudVault(cloudData){
       tx.onerror = rej;
     });
 
-    // Update salt jika berbeda
+    // Restore salt dan ver dari cloud — wajib sama agar decrypt berhasil
     if(obj.salt) localStorage.setItem('vault_salt', obj.salt);
+    if(obj.ver) localStorage.setItem('vault_ver', obj.ver);
     localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
 
     return true;
@@ -7421,10 +7423,8 @@ async function manualSync(){
         // Cloud lebih baru — download dan apply
         const ok = await applyCloudVault(cloudData);
         if(ok){
-          await loadItems();
-          render();
-          showToast('Vault synced from cloud', 'ok');
-          localStorage.setItem(_SYNC_TS_KEY, cloudTs);
+          showToast('Vault synced! Re-enter your master password to continue.', 'ok');
+          setTimeout(()=>{ lockVault(); }, 1500);
         } else {
           showToast('Sync failed', 'error');
         }
@@ -7477,14 +7477,9 @@ async function syncOnUnlock(){
     if(cloudNewer){
       const ok = await applyCloudVault(cloudData);
       if(ok){
-        await loadItems();
-        render();
-        showToast('Vault synced from cloud', 'ok');
-        localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
-        // Info master password
-        setTimeout(()=>{
-          showToast('Use the same master password as your other device', 'warn');
-        }, 2500);
+        // Salt sudah berubah — lock vault dan minta unlock ulang
+        showToast('Vault synced! Re-enter your master password to continue.', 'ok');
+        setTimeout(()=>{ lockVault(); }, 1500);
       }
     }
   }catch(e){}
