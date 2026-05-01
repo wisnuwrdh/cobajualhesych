@@ -40,18 +40,18 @@ function supabase() {
 async function getDevices(licenseKey) {
   const { url, headers } = supabase();
   const res = await fetch(
-    `${url}/rest/v1/license_devices?license_key=eq.${encodeURIComponent(licenseKey)}&select=device_id`,
+    `${url}/rest/v1/license_devices?license_key=eq.${encodeURIComponent(licenseKey)}&select=device_id,device_name,activated_at`,
     { headers }
   );
-  return await res.json(); // array of { device_id }
+  return await res.json();
 }
 
-async function addDevice(licenseKey, deviceId) {
+async function addDevice(licenseKey, deviceId, deviceName) {
   const { url, headers } = supabase();
   await fetch(`${url}/rest/v1/license_devices`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ license_key: licenseKey, device_id: deviceId }),
+    body: JSON.stringify({ license_key: licenseKey, device_id: deviceId, device_name: deviceName }),
   });
 }
 
@@ -75,21 +75,30 @@ export default async function handler(req, res) {
     return res.status(429).json({ valid: false, error: 'Too many attempts. Try again later.' });
   }
 
-  const { license, deviceId, action } = req.body;
+  const { license, deviceId, deviceName, action } = req.body;
 
   if (!license || typeof license !== 'string') {
     return res.status(400).json({ valid: false, error: 'Missing license key' });
   }
-  if (!deviceId || typeof deviceId !== 'string') {
-    return res.status(400).json({ valid: false, error: 'Missing device ID' });
-  }
 
   const key = license.trim();
 
-  // Handle remove device (saat user hapus license di device)
+  // Handle list devices
+  if (action === 'list') {
+    if (!deviceId) return res.status(400).json({ error: 'Missing deviceId' });
+    const devices = await getDevices(key);
+    return res.status(200).json({ devices });
+  }
+
+  // Handle remove device
   if (action === 'remove') {
+    if (!deviceId) return res.status(400).json({ error: 'Missing deviceId' });
     await removeDevice(key, deviceId);
     return res.status(200).json({ success: true });
+  }
+
+  if (!deviceId || typeof deviceId !== 'string') {
+    return res.status(400).json({ valid: false, error: 'Missing device ID' });
   }
 
   // Verify via Gumroad
@@ -103,7 +112,6 @@ export default async function handler(req, res) {
   const existingDevice = devices.find(d => d.device_id === deviceId);
 
   if (existingDevice) {
-    // Device sudah terdaftar — re-aktivasi, langsung valid
     return res.status(200).json({ valid: true });
   }
 
@@ -112,12 +120,26 @@ export default async function handler(req, res) {
       valid: false,
       error: `Device limit reached. Maximum ${MAX_DEVICES} devices allowed. Remove a device first.`,
       deviceLimitReached: true,
+      devices,
     });
   }
 
   // Daftarkan device baru
-  await addDevice(key, deviceId);
+  const name = deviceName || getAutoDeviceName(req);
+  await addDevice(key, deviceId, name);
   return res.status(200).json({ valid: true });
+}
+
+function getAutoDeviceName(req) {
+  const ua = req.headers['user-agent'] || '';
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua)) return 'iPad';
+  if (/Android/.test(ua) && /Mobile/.test(ua)) return 'Android Phone';
+  if (/Android/.test(ua)) return 'Android Tablet';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'Windows PC';
+  if (/Linux/.test(ua)) return 'Linux PC';
+  return 'Unknown Device';
 }
 
 // ── Verify via Gumroad API ────────────────────────────────────────────────
