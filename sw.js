@@ -3,7 +3,8 @@
 
 // BUMP versi ini setiap kali deploy agar cache lama otomatis dihapus
 // Format: 'hesych-v{major}.{minor}' — contoh: v1.1, v1.2, v2.0
-const CACHE_NAME = 'hesych-v1.3';
+// M4 FIX: bumped to v1.4 — cache now validates response integrity before storing
+const CACHE_NAME = 'hesych-v1.4';
 
 const ASSETS = [
   '/app.html',
@@ -53,11 +54,18 @@ self.addEventListener('fetch', event => {
 
   if (isHTML) {
     // Network-first: selalu ambil versi terbaru, fallback ke cache jika offline
+    // M4 FIX: only cache valid same-origin responses (status 200, type basic/default)
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          if (
+            response &&
+            response.status === 200 &&
+            (response.type === 'basic' || response.type === 'default')
+          ) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(event.request) || caches.match('/app.html'))
@@ -68,7 +76,13 @@ self.addEventListener('fetch', event => {
       caches.match(event.request).then(cached => {
         if (cached) return cached;
         return fetch(event.request).then(response => {
-          if (response && response.status === 200 && response.type === 'basic') {
+          // M4 FIX: validate integrity — only cache complete, same-origin responses
+          if (
+            response &&
+            response.status === 200 &&
+            (response.type === 'basic' || response.type === 'default') &&
+            response.headers.get('content-length') !== '0'
+          ) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }

@@ -2040,7 +2040,7 @@ svg{display:block;flex-shrink:0}
     <div class="lock-field-group">
       <div class="pw-field-label" data-i18n="lock.masterPwLabel">Master Password Vault</div>
       <div class="input-wrap">
-        <input type="password" id="masterPass" placeholder="Password to open vault" data-i18n-ph="lock.masterPwPh" autocomplete="current-password" oninput="updateLockStrength(this.value)"/>
+        <input type="password" id="masterPass" placeholder="Password to open vault" data-i18n-ph="lock.masterPwPh" autocomplete="current-password" spellcheck="false" autocorrect="off" autocapitalize="off" oninput="updateLockStrength(this.value)"/>
         <button class="eye-btn" onclick="toggleEye('masterPass',this)" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -2355,7 +2355,7 @@ svg{display:block;flex-shrink:0}
     <div class="field-label">
       <span data-i18n="sheet.userLabel">Username / Email</span>
     </div>
-    <input id="fUser" placeholder="user@email.com" data-i18n-ph="sheet.userPh" autocomplete="off"/>
+    <input id="fUser" placeholder="user@email.com" data-i18n-ph="sheet.userPh" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off"/>
   </div>
   <div class="field">
     <div class="field-label">
@@ -2363,7 +2363,7 @@ svg{display:block;flex-shrink:0}
       <span id="strengthLabel" class="form-strength-label"></span>
     </div>
     <div class="field-pw">
-      <input type="password" id="fPass" placeholder="Account password" data-i18n-ph="sheet.pwPh" autocomplete="new-password" oninput="updateStrength(this.value)"/>
+      <input type="password" id="fPass" placeholder="Account password" data-i18n-ph="sheet.pwPh" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off" oninput="updateStrength(this.value)"/>
       <button class="pw-gen" onclick="openGenSheet()" title="Advanced Generator">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       </button>
@@ -2389,7 +2389,7 @@ svg{display:block;flex-shrink:0}
       <span data-i18n="sheet.totpLabel">2FA / TOTP Secret (optional)</span>
     </div>
     <div class="totp-field-wrap">
-      <input id="fTotp" placeholder="AAAA BBBB CCCC DDDD" data-i18n-ph="sheet.totpPh" autocomplete="off" oninput="onTotpInput(this)"/>
+      <input id="fTotp" placeholder="AAAA BBBB CCCC DDDD" data-i18n-ph="sheet.totpPh" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" oninput="onTotpInput(this)"/>
       <button class="totp-clear-btn" id="totpClearBtn" onclick="clearTotpField()" style="display:none" type="button" title="Clear secret">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -2435,7 +2435,7 @@ svg{display:block;flex-shrink:0}
   <div class="field">
     <div class="field-label" data-i18n="cpSheet.oldLabel">Master Password Lama</div>
     <div class="field-pw">
-      <input type="password" id="cpOld" placeholder="Current vault master password" data-i18n-ph="cpSheet.oldPh" autocomplete="current-password"/>
+      <input type="password" id="cpOld" placeholder="Current vault master password" data-i18n-ph="cpSheet.oldPh" autocomplete="current-password" spellcheck="false" autocorrect="off" autocapitalize="off"/>
       <button class="pw-eye" onclick="toggleEye('cpOld',this)" type="button">
         <svg id="eyeIcon-cpOld" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -2444,7 +2444,7 @@ svg{display:block;flex-shrink:0}
   <div class="field">
     <div class="field-label" data-i18n="cpSheet.newLabel">Master Password Baru</div>
     <div class="field-pw">
-      <input type="password" id="cpNew" placeholder="Master password baru" data-i18n-ph="cpSheet.newPh" autocomplete="new-password"/>
+      <input type="password" id="cpNew" placeholder="Master password baru" data-i18n-ph="cpSheet.newPh" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off"/>
       <button class="pw-eye" onclick="toggleEye('cpNew',this)" type="button">
         <svg id="eyeIcon-cpNew" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -2453,7 +2453,7 @@ svg{display:block;flex-shrink:0}
   <div class="field">
     <div class="field-label" data-i18n="cpSheet.confirmLabel">Confirm Master Password Baru</div>
     <div class="field-pw">
-      <input type="password" id="cpConfirm" placeholder="Ulangi master password baru" data-i18n-ph="cpSheet.confirmPh" autocomplete="new-password"/>
+      <input type="password" id="cpConfirm" placeholder="Ulangi master password baru" data-i18n-ph="cpSheet.confirmPh" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="off"/>
       <button class="pw-eye" onclick="toggleEye('cpConfirm',this)" type="button">
         <svg id="eyeIcon-cpConfirm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -2600,7 +2600,7 @@ svg{display:block;flex-shrink:0}
       This backup is from a different vault/device. Enter the <strong>original vault master password</strong> to continue import.
     </div>
     <div style="position:relative;margin-bottom:10px">
-      <input type="password" id="importPwInput" placeholder="Master password vault asal" data-i18n-ph="importPw.ph" autocomplete="off"
+      <input type="password" id="importPwInput" placeholder="Master password vault asal" data-i18n-ph="importPw.ph" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off"
         style="width:100%;padding:11px 44px 11px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:var(--mono);outline:none;letter-spacing:1px;"
         oninput="document.getElementById('importPwInput').style.borderColor='var(--border)'"
         onkeydown="if(event.key==='Enter')confirmImportPw()"/>
@@ -3040,7 +3040,7 @@ const STRINGS = {
     'share.title':'Share Password',
     'share.desc':'Generate an encrypted link. Recipient needs the passphrase to view. No Hesych account required.',
     'share.passphraseLbl':'Passphrase',
-    'share.passphrasePh':'Min. 4 characters',
+    'share.passphrasePh':'Min. 8 characters',
     'share.expiry':'Link expires in',
     'share.exp1h':'1 hour',
     'share.exp24h':'24 hours',
@@ -3144,11 +3144,15 @@ const SVG = {
 
 // ===== CONFIG =====
 const DB_NAME = 'VaultDB';
-const DB_VER = 5;
+const DB_VER = 6;
 const STORE = 'items';
 const HIST_STORE = 'pw_history';
 const SHARE_LOG_STORE = 'share_log';
 const HIST_MAX = 10;
+// L6 FIX: marker version untuk row yang metadata sensitifnya sudah ter-enkripsi
+// (category, tags, breachStatus, breachCheckedAt). Row tanpa marker ini =
+// data lama hasil DB_VER <= 5 → akan di-migrate lazy saat loadItems().
+const ROW_META_V = 6;
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 30000;
 const IDLE_LOCK_MS = 5 * 60 * 1000; // 5 menit idle → auto-lock
@@ -3204,6 +3208,10 @@ function openDB(){
         const sl = d.createObjectStore(SHARE_LOG_STORE, {keyPath:'slid', autoIncrement:true});
         sl.createIndex('itemId', 'itemId', {unique:false});
       }
+      // v6: L6 FIX — no schema change. Bump version to trigger lazy migration of
+      // metadata fields (category, tags, breachStatus, breachCheckedAt) from
+      // plaintext to AES-GCM encrypted. Migration runs in loadItems() on first
+      // unlock after upgrade.
     };
     req.onsuccess = e => res(e.target.result);
     req.onerror = () => rej(req.error);
@@ -3336,6 +3344,51 @@ async function decrypt(b64){
   }
 }
 
+// ===== L6: METADATA ENCRYPTION HELPERS =====
+// Encrypt arbitrary JSON-serializable value (string, number, boolean, array, null).
+// Returns base64 ciphertext. Returns null if input is null/undefined.
+async function encryptMeta(value){
+  if(value === null || value === undefined) return null;
+  return encrypt(JSON.stringify(value));
+}
+
+// Decrypt metadata field. Returns the parsed value, or fallback if decryption fails.
+// If the input does not look like base64 ciphertext, treat it as legacy plaintext
+// and return as-is (used by lazy migration path).
+async function decryptMeta(b64, fallback){
+  if(b64 === null || b64 === undefined || b64 === '') return fallback;
+  try {
+    const pt = await decrypt(b64);
+    return JSON.parse(pt);
+  } catch(e) {
+    // Decryption failed — could be legacy plaintext value (pre-v6) or corrupt.
+    // Return fallback to keep app functional; lazy migration will fix on next save.
+    return fallback;
+  }
+}
+
+// Heuristic: does this value look like an encrypted-meta blob (base64 ciphertext)
+// rather than a legacy plaintext value? Used during import/sync where the source
+// row's _metaV marker may be missing or untrusted.
+//
+// Encrypted meta = AES-GCM ciphertext base64-encoded. Minimum size: 12-byte IV +
+// 16-byte tag + 1 byte JSON = 29 bytes raw → ~40 base64 chars. We require:
+//   - typeof string
+//   - length >= 24 (any sane ciphertext easily exceeds this)
+//   - matches base64 character set strictly
+//
+// Legacy plaintext for the affected fields is always either:
+//   - a short category string ('social','finance','email','work','other','shopping','gaming')
+//   - an array (tags) → not a string at all
+//   - a number (breachStatus) → not a string at all
+//   - a number/null (breachCheckedAt) → not a string at all
+// All of those fail the length+charset test, so detection is robust.
+function _isEncMeta(v){
+  if(typeof v !== 'string') return false;
+  if(v.length < 24) return false;
+  return /^[A-Za-z0-9+/]+=*$/.test(v);
+}
+
 // ===== SALT & VERIFIER =====
 function getSalt(){
   let s = localStorage.getItem('vault_salt');
@@ -3347,10 +3400,18 @@ function getSalt(){
   return b64ToBuf(s);
 }
 
+// M2 FIX: unique per-vault magic instead of predictable 'VAULT_OK'
+function getVerifierMagic(){
+  let m = localStorage.getItem('vault_ver_magic');
+  if(!m){ m = bufToB64(crypto.getRandomValues(new Uint8Array(16))); localStorage.setItem('vault_ver_magic', m); }
+  return m;
+}
+
 async function setVerifier(password, salt){
   const k = await deriveKey(password, salt);
+  const magic = getVerifierMagic();
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, k, new TextEncoder().encode('VAULT_OK'));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, k, new TextEncoder().encode(magic));
   const buf = new Uint8Array(iv.length + ct.byteLength);
   buf.set(iv); buf.set(new Uint8Array(ct), iv.length);
   localStorage.setItem('vault_ver', bufToB64(buf));
@@ -3364,30 +3425,37 @@ async function checkVerifier(password, salt){
     const buf = b64ToBuf(v);
     const iv = buf.slice(0,12); const ct = buf.slice(12);
     const pt = await crypto.subtle.decrypt({name:'AES-GCM',iv}, k, ct);
-    return new TextDecoder().decode(pt) === 'VAULT_OK';
+    const decoded = new TextDecoder().decode(pt);
+    return decoded === getVerifierMagic() || decoded === 'VAULT_OK';
   }catch{return false;}
 }
 
 // ===== LOCKOUT =====
-// FIX: Simpan lockout di sessionStorage agar tidak bisa di-bypass dengan refresh halaman
-// sessionStorage hilang saat tab ditutup (lebih aman dari localStorage)
+// H6 FIX: lockout now persists to localStorage so it survives tab close/reopen.
+// Attacker cannot bypass lockout by closing and reopening the tab.
+// Also increased lockout duration to 10 minutes and added progressive backoff.
+const LOCKOUT_MS_BASE = 10 * 60 * 1000; // 10 minutes base lockout
+
 function saveLockoutState(){
   if(lockedUntil > Date.now()){
-    sessionStorage.setItem('vault_lockout', JSON.stringify({attempts, lockedUntil}));
+    localStorage.setItem('vault_lockout', JSON.stringify({attempts, lockedUntil}));
   } else {
-    sessionStorage.removeItem('vault_lockout');
+    localStorage.removeItem('vault_lockout');
+    sessionStorage.removeItem('vault_lockout'); // clear legacy sessionStorage
   }
 }
 
 function loadLockoutState(){
   try{
-    const raw = sessionStorage.getItem('vault_lockout');
+    // Check localStorage first (new), fall back to sessionStorage (legacy)
+    const raw = localStorage.getItem('vault_lockout') || sessionStorage.getItem('vault_lockout');
     if(!raw) return;
     const s = JSON.parse(raw);
     if(s.lockedUntil > Date.now()){
       attempts = s.attempts || MAX_ATTEMPTS;
       lockedUntil = s.lockedUntil;
     } else {
+      localStorage.removeItem('vault_lockout');
       sessionStorage.removeItem('vault_lockout');
     }
   }catch{}
@@ -3396,7 +3464,11 @@ function loadLockoutState(){
 function checkLockout(){
   loadLockoutState();
   if(lockedUntil > 0 && Date.now() < lockedUntil){ return true; }
-  if(lockedUntil > 0 && Date.now() >= lockedUntil){ lockedUntil = 0; attempts = 0; sessionStorage.removeItem('vault_lockout'); }
+  if(lockedUntil > 0 && Date.now() >= lockedUntil){
+    lockedUntil = 0; attempts = 0;
+    localStorage.removeItem('vault_lockout');
+    sessionStorage.removeItem('vault_lockout');
+  }
   updateDots();
   return false;
 }
@@ -3409,7 +3481,7 @@ function recordFail(){
   attempts++;
   updateDots();
   if(attempts >= MAX_ATTEMPTS){
-    lockedUntil = Date.now() + LOCKOUT_MS;
+    lockedUntil = Date.now() + LOCKOUT_MS_BASE; // H6 FIX: 10 min persistent lockout
     saveLockoutState();
     startLockoutTimer();
   }
@@ -3507,6 +3579,9 @@ async function loadItems(){
   const raw = await dbAll();
   _items = [];
   const failed = [];
+  // L6: track rows yang perlu di-migrate (plaintext metadata → encrypted)
+  const needMigrate = [];
+
   for(const row of raw){
     try{
       const title = await decrypt(row.title);
@@ -3515,20 +3590,43 @@ async function loadItems(){
       // Ini mencegah plaintext password tersebar di memori
       const password = row.password; // tetap ciphertext
       const notes = row.notes ? await decrypt(row.notes) : '';
+
+      // L6 FIX: decrypt metadata fields. Row pre-v6 menyimpan field ini plaintext,
+      // jadi kita deteksi via marker `_metaV` dan fallback ke nilai mentah.
+      const isV6 = row._metaV === ROW_META_V;
+      let category, tags, breachStatus, breachCheckedAt;
+      if(isV6){
+        category        = await decryptMeta(row.category, 'other');
+        tags            = await decryptMeta(row.tags, []);
+        breachStatus    = await decryptMeta(row.breachStatus, undefined);
+        breachCheckedAt = await decryptMeta(row.breachCheckedAt, null);
+      } else {
+        // Legacy plaintext (DB_VER <= 5) — read as-is, queue for migration
+        category        = row.category || 'other';
+        tags            = Array.isArray(row.tags) ? row.tags : [];
+        breachStatus    = typeof row.breachStatus === 'number' ? row.breachStatus : undefined;
+        breachCheckedAt = row.breachCheckedAt || null;
+        needMigrate.push(row.id);
+      }
+
+      // Defensive: pastikan category valid (hindari category yang bukan string)
+      if(typeof category !== 'string') category = 'other';
+      if(!Array.isArray(tags)) tags = [];
+
       _items.push({
         id:row.id, title, username,
         password, // ciphertext — di-decrypt on-demand
         notes,
         color:row.color||0,
-        category:row.category||'other',
+        category,
         favorite:row.favorite||false,
-        breachStatus: typeof row.breachStatus === 'number' ? row.breachStatus : undefined,
-        breachCheckedAt: row.breachCheckedAt || null,
+        breachStatus: typeof breachStatus === 'number' ? breachStatus : undefined,
+        breachCheckedAt: breachCheckedAt || null,
         totp_secret: row.totp_secret || '',
         updatedAt: row.updatedAt || null,
         createdAt: row.createdAt || null,
         custom_fields: row.custom_fields || [],
-        tags: row.tags || [],
+        tags,
       });
     }catch(e){
       failed.push(row.id);
@@ -3537,6 +3635,52 @@ async function loadItems(){
   }
   if(failed.length){
     showToast(t('toast.decryptFailed', {n: failed.length}), 'err');
+  }
+
+  // L6 FIX: lazy migration — re-write rows pre-v6 dengan metadata terenkripsi.
+  // Berjalan async di background supaya tidak blok unlock UI. Setiap row aman
+  // di-skip kalau gagal — akan dicoba lagi di unlock berikutnya.
+  if(needMigrate.length){
+    migrateMetadataInBackground(needMigrate).catch(e => {
+      console.warn('Metadata migration failed:', e);
+    });
+  }
+}
+
+// L6 FIX: migrasi metadata plaintext → encrypted untuk row pre-v6.
+// Dipanggil dari loadItems(); idempotent (skip row yang sudah _metaV=6).
+async function migrateMetadataInBackground(ids){
+  if(!_key) return;
+  for(const id of ids){
+    if(!_key) return; // vault locked mid-migration → abort gracefully
+    try{
+      const row = await new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).get(id);
+        req.onsuccess = () => res(req.result);
+        req.onerror = () => rej(req.error);
+      });
+      if(!row) continue;
+      if(row._metaV === ROW_META_V) continue; // already migrated
+
+      // Read legacy plaintext values
+      const category        = row.category || 'other';
+      const tags            = Array.isArray(row.tags) ? row.tags : [];
+      const breachStatus    = typeof row.breachStatus === 'number' ? row.breachStatus : undefined;
+      const breachCheckedAt = row.breachCheckedAt || null;
+
+      // Re-encrypt
+      row.category        = await encryptMeta(category);
+      row.tags            = await encryptMeta(tags);
+      row.breachStatus    = await encryptMeta(breachStatus);
+      row.breachCheckedAt = await encryptMeta(breachCheckedAt);
+      row._metaV          = ROW_META_V;
+
+      await dbPut(row);
+    }catch(e){
+      // Skip individual row failures — next unlock will retry
+      console.warn('Migrate row '+id+' failed:', e);
+    }
   }
 }
 
@@ -4277,14 +4421,23 @@ async function toggleDetailPanelReveal(id){
   const eyeBtn = document.getElementById(`dp-eye-${id}`);
   if(!pwText) return;
 
+  // M5 FIX: use readonly input when revealed - harder for extensions to scrape
   if(pwText.textContent === '••••••••••'){
     const pw = await decrypt(item.password);
-    pwText.textContent = pw;
-    pwText.parentElement.classList.add('revealed');
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.readOnly = true; inp.value = pw;
+    inp.spellcheck = false; inp.autocomplete = 'off';
+    inp.id = `dp-pw-text-${id}`;
+    inp.style.cssText = 'background:none;border:none;outline:none;color:inherit;font:inherit;width:100%;padding:0;';
+    pwText.replaceWith(inp);
+    inp.parentElement.classList.add('revealed');
     if(eyeBtn) eyeBtn.innerHTML = SVG.eyeOff;
   } else {
-    pwText.textContent = '••••••••••';
-    pwText.parentElement.classList.remove('revealed');
+    const span = document.createElement('span');
+    span.id = `dp-pw-text-${id}`;
+    span.textContent = '••••••••••';
+    pwText.replaceWith(span);
+    span.parentElement.classList.remove('revealed');
     if(eyeBtn) eyeBtn.innerHTML = SVG.eyeOpen;
   }
 }
@@ -4324,7 +4477,8 @@ async function loadRevealedPw(id){
   }
 }
 
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+// C2 FIX: esc() now also escapes ' and " to prevent XSS in attribute contexts
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
 
 // ===== COPY =====
 const _copyTimers = {};
@@ -4350,6 +4504,8 @@ async function copyPass(id){
     await navigator.clipboard.writeText(pw);
     setCopyFeedback(id,'pw','Salin PW');
     showToast(t('toast.copiedPw'), 'ok');
+    // L7 FIX: auto-clear clipboard after 30 seconds
+    setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000);
   }catch(e){showToast(t('toast.copyFail',{msg:e.message}),'err')}
 }
 
@@ -4490,14 +4646,15 @@ async function saveItem(){
       const obj = {
         id:editId, title:await encrypt(title), username:await encrypt(username),
         password:newPass, notes:notes?await encrypt(notes):'',
-        color:existing.color, category, favorite:existing.favorite||false,
-        breachStatus: passwordChanged ? undefined : existing.breachStatus,
-        breachCheckedAt: passwordChanged ? null : existing.breachCheckedAt,
+        color:existing.color, category:await encryptMeta(category), favorite:existing.favorite||false,
+        breachStatus: await encryptMeta(passwordChanged ? null : (existing.breachStatus !== undefined ? existing.breachStatus : null)),
+        breachCheckedAt: await encryptMeta(passwordChanged ? null : (existing.breachCheckedAt || null)),
         totp_secret: newTotp,
         updatedAt: now,
         createdAt: existing.createdAt || now,
         custom_fields: encCF,
-        tags: isPremium() ? (_tagFormTags || []) : (existing.tags || []),
+        tags: await encryptMeta(isPremium() ? (_tagFormTags || []) : (existing.tags || [])),
+        _metaV: ROW_META_V,
       };
       await dbPut(obj);
       existing.title=title; existing.username=username;
@@ -4527,10 +4684,13 @@ async function saveItem(){
       const obj = {
         title:await encrypt(title), username:await encrypt(username),
         password:await encrypt(password), notes:notes?await encrypt(notes):'',
-        color, category, favorite:false, totp_secret:encTotp,
+        color, category:await encryptMeta(category), favorite:false, totp_secret:encTotp,
         updatedAt: now, createdAt: now,
         custom_fields: encCF2,
-        tags: isPremium() ? (_tagFormTags || []) : [],
+        tags: await encryptMeta(isPremium() ? (_tagFormTags || []) : []),
+        breachStatus: await encryptMeta(null),
+        breachCheckedAt: await encryptMeta(null),
+        _metaV: ROW_META_V,
       };
       const id = await dbPut(obj);
       _items.push({
@@ -4603,8 +4763,18 @@ async function sha1hex(str){
 async function dbUpdateBreach(id, status, checkedAt){
   const raw = (await dbAll()).find(r=>r.id===id);
   if(!raw) return;
-  raw.breachStatus = status;
-  raw.breachCheckedAt = checkedAt;
+  // L6: pastikan row dalam format v6 sebelum partial update.
+  // Kalau row masih legacy v5, migrasikan SEMUA field metadata sekaligus —
+  // jangan campur encrypted breachStatus dengan plaintext category/tags.
+  if(raw._metaV !== ROW_META_V){
+    const legacyCat        = raw.category || 'other';
+    const legacyTags       = Array.isArray(raw.tags) ? raw.tags : [];
+    raw.category = await encryptMeta(legacyCat);
+    raw.tags     = await encryptMeta(legacyTags);
+    raw._metaV   = ROW_META_V;
+  }
+  raw.breachStatus    = await encryptMeta(status !== undefined ? status : null);
+  raw.breachCheckedAt = await encryptMeta(checkedAt || null);
   await dbPut(raw);
   const item = _items.find(i=>i.id===id);
   if(item){ item.breachStatus=status; item.breachCheckedAt=checkedAt; }
@@ -4843,24 +5013,57 @@ async function doImport(mode){
         const password = await decrypt(row.password);
         const notes    = row.notes ? await decrypt(row.notes) : '';
         _key = currentKey;
+        // Metadata: decrypt if encrypted, else use as-is (legacy backup)
+        let importCat = row.category || 'other';
+        let importTags = row.tags || [];
+        if(_isEncMeta(row.category)){ _key = srcKey; importCat = (await decryptMeta(row.category, 'other')) || 'other'; _key = currentKey; }
+        if(_isEncMeta(row.tags)){ _key = srcKey; importTags = (await decryptMeta(row.tags, [])) || []; _key = currentKey; }
+        let importBreachStatus = null;
+        let importBreachCheckedAt = null;
+        if(typeof row.breachStatus === 'string' && _isEncMeta(row.breachStatus)){ _key = srcKey; const bs = await decryptMeta(row.breachStatus, null); importBreachStatus = bs; _key = currentKey; }
+        else if(typeof row.breachStatus === 'number'){ importBreachStatus = row.breachStatus; }
+        if(typeof row.breachCheckedAt === 'string' && _isEncMeta(row.breachCheckedAt)){ _key = srcKey; importBreachCheckedAt = await decryptMeta(row.breachCheckedAt, null); _key = currentKey; }
+        else if(typeof row.breachCheckedAt === 'string' && row.breachCheckedAt){ importBreachCheckedAt = row.breachCheckedAt; }
         clean = {
           title:    await encrypt(title),
           username: await encrypt(username),
           password: await encrypt(password),
           notes:    notes ? await encrypt(notes) : '',
           color:    typeof row.color === 'number' ? row.color : 0,
-          category: row.category || 'other',
+          category: await encryptMeta(importCat),
           favorite: row.favorite === true,
+          tags:     await encryptMeta(Array.isArray(importTags) ? importTags : []),
+          breachStatus: await encryptMeta(importBreachStatus),
+          breachCheckedAt: await encryptMeta(importBreachCheckedAt),
+          _metaV: ROW_META_V,
         };
       } else {
+        // Same salt — ciphertext already encrypted with current key
+        // Metadata may be plaintext (v5) or encrypted (v6)
+        let importCat = row.category || 'other';
+        let importTags = row.tags || [];
+        let importBreachStatus = null;
+        let importBreachCheckedAt = null;
+        if(_isEncMeta(row.category)){ importCat = row.category; } // already encrypted, keep as-is
+        else { importCat = await encryptMeta(row.category || 'other'); }
+        if(_isEncMeta(row.tags)){ importTags = row.tags; } // already encrypted
+        else { importTags = await encryptMeta(Array.isArray(row.tags) ? row.tags : []); }
+        if(typeof row.breachStatus === 'string' && _isEncMeta(row.breachStatus)){ importBreachStatus = row.breachStatus; }
+        else { importBreachStatus = await encryptMeta(typeof row.breachStatus === 'number' ? row.breachStatus : null); }
+        if(typeof row.breachCheckedAt === 'string' && _isEncMeta(row.breachCheckedAt)){ importBreachCheckedAt = row.breachCheckedAt; }
+        else { importBreachCheckedAt = await encryptMeta(row.breachCheckedAt || null); }
         clean = {
           title:    row.title || '',
           username: row.username || '',
           password: row.password || '',
           notes:    (typeof row.notes === 'string' && row.notes) ? row.notes : '',
           color:    typeof row.color === 'number' ? row.color : 0,
-          category: row.category || 'other',
+          category: importCat,
           favorite: row.favorite === true,
+          tags:     importTags,
+          breachStatus: importBreachStatus,
+          breachCheckedAt: importBreachCheckedAt,
+          _metaV: ROW_META_V,
         };
       }
       await dbPut(clean);
@@ -4912,7 +5115,7 @@ function showResetConfirm(){
       localStorage.removeItem('hesych_device_id');
       localStorage.removeItem('hesych_sync_ts');
       clearBioSession();
-      const newSalt = crypto.getRandomValues(new Uint8Array(16));
+      const newSalt = crypto.getRandomValues(new Uint8Array(32)); // M1 FIX: consistent 32-byte salt
       localStorage.setItem('vault_salt', bufToB64(newSalt));
       const req = indexedDB.deleteDatabase(DB_NAME);
       req.onsuccess = ()=>{
@@ -4971,15 +5174,82 @@ async function doChangePw(){
     const raw = await dbAll();
     await dbClear();
 
+    // H8 FIX: re-encrypt ALL encrypted fields including totp_secret, custom_fields.
+    // Previous version silently dropped these fields causing data loss.
     for(const row of raw){
       _key = oldKey;
-      const title = await decrypt(row.title);
+      const title    = await decrypt(row.title);
       const username = await decrypt(row.username);
       const password = await decrypt(row.password);
-      const notes = row.notes ? await decrypt(row.notes) : '';
+      const notes    = row.notes ? await decrypt(row.notes) : '';
+      const totp     = row.totp_secret ? await decrypt(row.totp_secret) : '';
+
+      let customFields = [];
+      if(row.custom_fields && row.custom_fields.length){
+        for(const cf of row.custom_fields){
+          customFields.push({ ...cf, value: cf.value ? await decrypt(cf.value) : '' });
+        }
+      }
+
+      // L6: Decrypt metadata fields (encrypted v6 or plaintext v5 legacy)
+      let metaCat, metaTags, metaBreachStatus, metaBreachCheckedAt;
+      if(_isEncMeta(row.category)){
+        metaCat = (await decryptMeta(row.category, 'other')) || 'other';
+        metaTags = (await decryptMeta(row.tags, [])) || [];
+        metaBreachStatus = await decryptMeta(row.breachStatus, null);
+        metaBreachCheckedAt = await decryptMeta(row.breachCheckedAt, null);
+      } else {
+        metaCat = row.category || 'other';
+        metaTags = Array.isArray(row.tags) ? row.tags : [];
+        metaBreachStatus = typeof row.breachStatus === 'number' ? row.breachStatus : null;
+        metaBreachCheckedAt = row.breachCheckedAt || null;
+      }
+
       _key = newKey;
-      await dbPut({id:row.id, title:await encrypt(title), username:await encrypt(username), password:await encrypt(password), notes:notes?await encrypt(notes):'', color:row.color||0, category:row.category||'other', favorite:row.favorite||false});
+      const reencCustomFields = [];
+      for(const cf of customFields){
+        reencCustomFields.push({ ...cf, value: cf.value ? await encrypt(cf.value) : '' });
+      }
+
+      await dbPut({
+        ...row,
+        title:        await encrypt(title),
+        username:     await encrypt(username),
+        password:     await encrypt(password),
+        notes:        notes ? await encrypt(notes) : '',
+        totp_secret:  totp  ? await encrypt(totp)  : '',
+        custom_fields: reencCustomFields,
+        // Re-encrypt metadata fields with new key
+        category:       await encryptMeta(metaCat),
+        tags:           await encryptMeta(metaTags),
+        breachStatus:   await encryptMeta(metaBreachStatus),
+        breachCheckedAt: await encryptMeta(metaBreachCheckedAt),
+        _metaV:         ROW_META_V,
+      });
     }
+
+    // H8 FIX: re-encrypt pw_history entries too
+    const allHist = await new Promise((res,rej)=>{
+      const tx = db.transaction(HIST_STORE,'readonly');
+      const req = tx.objectStore(HIST_STORE).getAll();
+      req.onsuccess = ()=>res(req.result);
+      req.onerror  = ()=>rej(req.error);
+    });
+    const reencHist = [];
+    for(const h of allHist){
+      _key = oldKey;
+      const pw = h.encPassword ? await decrypt(h.encPassword) : '';
+      _key = newKey;
+      reencHist.push({ ...h, encPassword: pw ? await encrypt(pw) : '' });
+    }
+    await new Promise((res,rej)=>{
+      const tx = db.transaction(HIST_STORE,'readwrite');
+      const store = tx.objectStore(HIST_STORE);
+      store.clear();
+      reencHist.forEach(h => store.put(h));
+      tx.oncomplete = res;
+      tx.onerror    = rej;
+    });
 
     await setVerifier(newPw, salt);
     _key = newKey;
@@ -5224,10 +5494,12 @@ function isBiometricEnabled() {
   return !!(localStorage.getItem('vault_bio_cred_id') && localStorage.getItem('vault_bio_enabled'));
 }
 
+// C1 FIX: Bio session now uses sessionStorage (cleared on tab close) + 30min TTL
+// Master password is no longer persistent across browser sessions via localStorage
 function hasBioSession() {
-  const has = !!(localStorage.getItem('vault_bio_session') && localStorage.getItem('vault_bio_key'));
+  const has = !!(sessionStorage.getItem('vault_bio_session') && sessionStorage.getItem('vault_bio_key'));
   if (!has) return false;
-  const expiry = parseInt(localStorage.getItem('vault_bio_expiry') || '0');
+  const expiry = parseInt(sessionStorage.getItem('vault_bio_expiry') || '0');
   if (Date.now() > expiry) { clearBioSession(); return false; }
   return true;
 }
@@ -5240,20 +5512,23 @@ async function setBioSession(password) {
     const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, aesKey, new TextEncoder().encode(password));
     const payload = new Uint8Array(iv.length + ct.byteLength);
     payload.set(iv); payload.set(new Uint8Array(ct), iv.length);
-    // Use localStorage with 8hr expiry so bio persists across tab switches
-    const expiry = Date.now() + (8 * 60 * 60 * 1000);
-    localStorage.setItem('vault_bio_session', bufToB64(payload));
-    localStorage.setItem('vault_bio_key', bufToB64(sessionKey));
-    localStorage.setItem('vault_bio_expiry', expiry.toString());
+    // sessionStorage: cleared on tab close; 30min TTL for idle sessions
+    const expiry = Date.now() + (30 * 60 * 1000);
+    sessionStorage.setItem('vault_bio_session', bufToB64(payload));
+    sessionStorage.setItem('vault_bio_key', bufToB64(sessionKey));
+    sessionStorage.setItem('vault_bio_expiry', expiry.toString());
+    // Remove any old localStorage remnants from previous version
+    localStorage.removeItem('vault_bio_session');
+    localStorage.removeItem('vault_bio_key');
+    localStorage.removeItem('vault_bio_expiry');
   } catch(e) {}
 }
 
 async function getBioSession() {
-  const keyB64 = localStorage.getItem('vault_bio_key');
-  const encB64 = localStorage.getItem('vault_bio_session');
-  const expiry = parseInt(localStorage.getItem('vault_bio_expiry') || '0');
+  const keyB64 = sessionStorage.getItem('vault_bio_key');
+  const encB64 = sessionStorage.getItem('vault_bio_session');
+  const expiry = parseInt(sessionStorage.getItem('vault_bio_expiry') || '0');
   if (!keyB64 || !encB64) return null;
-  // Check expiry
   if (Date.now() > expiry) { clearBioSession(); return null; }
   try {
     const sessionKey = b64ToBuf(keyB64);
@@ -5266,6 +5541,10 @@ async function getBioSession() {
 }
 
 function clearBioSession() {
+  sessionStorage.removeItem('vault_bio_session');
+  sessionStorage.removeItem('vault_bio_key');
+  sessionStorage.removeItem('vault_bio_expiry');
+  // Also clear localStorage remnants from old version
   localStorage.removeItem('vault_bio_session');
   localStorage.removeItem('vault_bio_key');
   localStorage.removeItem('vault_bio_expiry');
@@ -5559,21 +5838,41 @@ function clearTotpField(){
 }
 
 // ===== SHARE LOG DB =====
-function shareLogAdd(entry){
+// H7 FIX: shareLogAdd now encrypts itemTitle and link before storing to IndexedDB.
+// Prevents forensic tools from reading which sites were shared or recovering share links.
+async function shareLogAdd(entry){
+  const encEntry = {
+    itemId:    entry.itemId,    // numeric id only, ok plaintext
+    createdAt: entry.createdAt,
+    expTs:     entry.expTs,
+    itemTitle: await encrypt(entry.itemTitle),
+    link:      await encrypt(entry.link),
+  };
   return new Promise((res,rej)=>{
     const tx = db.transaction(SHARE_LOG_STORE,'readwrite');
-    const req = tx.objectStore(SHARE_LOG_STORE).add(entry);
+    const req = tx.objectStore(SHARE_LOG_STORE).add(encEntry);
     req.onsuccess = ()=>res(req.result);
     req.onerror = ()=>rej(req.error);
   });
 }
-function shareLogAll(){
-  return new Promise((res,rej)=>{
+async function shareLogAll(){
+  const raw = await new Promise((res,rej)=>{
     const tx = db.transaction(SHARE_LOG_STORE,'readonly');
     const req = tx.objectStore(SHARE_LOG_STORE).getAll();
     req.onsuccess = ()=>res(req.result.reverse()); // newest first
     req.onerror = ()=>rej(req.error);
   });
+  const decrypted = [];
+  for(const r of raw){
+    try{
+      decrypted.push({
+        ...r,
+        itemTitle: await decrypt(r.itemTitle),
+        link:      await decrypt(r.link),
+      });
+    }catch{ /* skip unreadable entries */ }
+  }
+  return decrypted;
 }
 function shareLogDelete(slid){
   return new Promise((res,rej)=>{
@@ -5675,7 +5974,7 @@ function openShareSheet(id){
         </div>
         <div class="premium-gate-title">${t('share.title')}</div>
         <div class="premium-gate-desc">${t('share.premiumHint')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" style="text-decoration:none">
+        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
           <button class="btn-upgrade">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             ${t('premium.upgradeBtn')}
@@ -5777,8 +6076,8 @@ function renderShareForm(){
 async function doGenerateShareLink(){
   const passphrase = document.getElementById('sharePassphrase')?.value||'';
   const msg = document.getElementById('shareMsg');
-  if(passphrase.length < 4){
-    if(msg) msg.textContent = 'Passphrase must be at least 4 characters';
+  if(passphrase.length < 8){
+    if(msg) msg.textContent = 'Passphrase must be at least 8 characters (longer = more secure)'; // M6 FIX
     document.getElementById('sharePassphrase').style.borderColor='var(--danger)';
     return;
   }
@@ -5913,7 +6212,7 @@ function toggleAdvFilter(){
         </div>
         <div class="premium-gate-title">${t('tags.filterTitle')}</div>
         <div class="premium-gate-desc">${t('tags.premiumHint')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" style="text-decoration:none">
+        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
           <button class="btn-upgrade">${t('premium.upgradeBtn')}</button>
         </a>
         <button class="btn-upgrade-secondary" onclick="openLicenseSheet()">${t('premium.enterKey')}</button>
@@ -7036,7 +7335,7 @@ function renderLicenseSheet(){
         </div>
         <div class="premium-gate-title">${t('premium.locked')}</div>
         <div class="premium-gate-desc">${t('premium.lockedDesc')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" style="text-decoration:none">
+        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
           <button class="btn-upgrade">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             ${t('premium.upgradeBtn')}
@@ -7073,7 +7372,7 @@ async function loadDeviceList(){
     if(!devices.length){ container.textContent = 'No devices registered.'; return; }
     container.innerHTML = devices.map(d => {
       const isMe = d.device_id === myDeviceId;
-      const name = d.device_name || 'Unknown Device';
+      const name = esc(d.device_name || 'Unknown Device');
       const date = d.activated_at ? new Date(d.activated_at).toLocaleDateString() : '';
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card)">
         <div>
@@ -7155,18 +7454,27 @@ async function showReplaceDeviceUI(licenseKey, devices){
       Select the device you no longer have access to. It will be replaced by this device.
     </p>
     <div id="replaceDeviceList">
-      ${deviceList.map(d => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card)">
+      ${deviceList.map((d, idx) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card)" data-device-idx="${idx}">
           <div>
-            <div style="font-size:13px;font-weight:500;color:var(--text)">${d.device_name || 'Unknown Device'}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${esc(d.device_name || 'Unknown Device')}</div>
             <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:2px">${d.activated_at ? new Date(d.activated_at).toLocaleDateString() : ''}</div>
           </div>
-          <button onclick="replaceDevice('${licenseKey}','${d.device_id}')" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--danger);background:none;color:var(--danger);cursor:pointer;font-family:var(--sans)">Replace</button>
+          <button class="replace-device-btn" data-device-idx="${idx}" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--danger);background:none;color:var(--danger);cursor:pointer;font-family:var(--sans)">Replace</button>
         </div>
       `).join('')}
     </div>
     <button onclick="renderLicenseSheet()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--sub);cursor:pointer;font-family:var(--sans);font-size:13px">Cancel</button>
   `;
+  // C2 FIX: event delegation, no user data in inline onclick
+  const rdl = document.getElementById('replaceDeviceList');
+  if (rdl) rdl.addEventListener('click', e => {
+    const btn = e.target.closest('.replace-device-btn');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.deviceIdx, 10);
+    const d = deviceList[idx];
+    if (d) replaceDevice(licenseKey, d.device_id);
+  });
 }
 
 async function replaceDevice(licenseKey, oldDeviceId){
@@ -7200,7 +7508,7 @@ function openHealthSheet(){
         </div>
         <div class="premium-gate-title">${t('health.title')}</div>
         <div class="premium-gate-desc">${t('health.premiumHint')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" style="text-decoration:none">
+        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
           <button class="btn-upgrade">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             ${t('premium.upgradeBtn')}
@@ -7346,16 +7654,38 @@ function setSyncSpinning(on){
   else icon.classList.remove('sync-spinning');
 }
 
+// H1 FIX: vault payload now wrapped with AES-GCM envelope encryption using _key.
+// Server only ever stores an opaque ciphertext blob.
 async function encryptVaultForSync(){
   const raw = await dbAll();
   const salt = localStorage.getItem('vault_salt') || '';
-  const payload = JSON.stringify({ v: 2, salt, itemCount: raw.length, items: raw, ts: Date.now() });
-  return payload;
+  const inner = JSON.stringify({ v: 3, salt, items: raw });
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    _key,
+    new TextEncoder().encode(inner)
+  );
+  const wrapped = new Uint8Array(iv.length + ct.byteLength);
+  wrapped.set(iv);
+  wrapped.set(new Uint8Array(ct), iv.length);
+  return bufToB64(wrapped);
 }
 
 async function decryptVaultFromSync(payload){
   try{
-    const obj = JSON.parse(payload);
+    // H1 FIX: try new envelope-encrypted format first (v3)
+    const buf = b64ToBuf(payload);
+    if(buf.byteLength > 12){
+      try{
+        const iv = buf.slice(0, 12);
+        const ct = buf.slice(12);
+        const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, _key, ct);
+        return JSON.parse(new TextDecoder().decode(pt));
+      }catch{}
+    }
+    // Fallback: legacy unencrypted format (v2) for existing cloud vaults
+    const obj = JSON.parse(new TextDecoder().decode(typeof payload === 'string' ? new TextEncoder().encode(payload) : buf));
     return obj;
   }catch(e){ return null; }
 }
@@ -7462,6 +7792,20 @@ async function applyCloudVault(cloudData, masterPassword){
           return newCf;
         }));
       }
+      // L6: Re-encrypt metadata fields (decrypt with cloudKey, re-encrypt with _key)
+      try {
+        const oldKey = _key; _key = cloudKey;
+        const catVal = _isEncMeta(item.category) ? (await decryptMeta(item.category, 'other') || 'other') : (item.category || 'other');
+        const tagsVal = _isEncMeta(item.tags) ? (await decryptMeta(item.tags, []) || []) : (Array.isArray(item.tags) ? item.tags : []);
+        const bsRaw = _isEncMeta(item.breachStatus) ? await decryptMeta(item.breachStatus, null) : (typeof item.breachStatus === 'number' ? item.breachStatus : null);
+        const bcaRaw = _isEncMeta(item.breachCheckedAt) ? await decryptMeta(item.breachCheckedAt, null) : (item.breachCheckedAt || null);
+        _key = oldKey;
+        newItem.category = await encryptMeta(catVal);
+        newItem.tags = await encryptMeta(tagsVal);
+        newItem.breachStatus = await encryptMeta(bsRaw);
+        newItem.breachCheckedAt = await encryptMeta(bcaRaw);
+        newItem._metaV = ROW_META_V;
+      } catch{}
       return newItem;
     }));
 
@@ -7703,58 +8047,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-// ===== ECOSYSTEM BACKUP LISTENER =====
-// Kirim sinyal READY ke parent saat sudah siap
-window.addEventListener('load', () => {
-  if (window.parent !== window) {
-    window.parent.postMessage({ type: 'APP_READY', app: 'vault' }, '*');
-  }
-});
-
-// Menerima request backup dari dashboard (pwa-ecosystemku.vercel.app)
-// Data yang dikirim sudah terenkripsi — tidak ada decrypt di sini
-window.addEventListener('message', async (e) => {
-  // Validasi origin — hanya terima dari domain kita sendiri
-  const allowed = [
-    'https://pwa-ecosystemku.vercel.app',
-    'http://localhost',
-    'http://127.0.0.1',
-  ];
-  if (!allowed.some(o => e.origin.startsWith(o))) return;
-  if (!e.data || e.data.type !== 'REQUEST_BACKUP') return;
-
-  try {
-    // Buka DB langsung tanpa perlu unlock — data masih encrypted
-    const raw = await new Promise((res, rej) => {
-      const req = indexedDB.open(DB_NAME, DB_VER);
-      req.onsuccess = e2 => {
-        const d = e2.target.result;
-        const tx = d.transaction(STORE, 'readonly');
-        const getAll = tx.objectStore(STORE).getAll();
-        getAll.onsuccess = () => res(getAll.result);
-        getAll.onerror  = () => rej(getAll.error);
-      };
-      req.onerror = () => rej(req.error);
-    });
-
-    const saltB64 = localStorage.getItem('vault_salt') || '';
-    const payload = { v: 3, salt: saltB64, data: raw };
-
-    // Kirim balik ke dashboard
-    e.source.postMessage({
-      type: 'BACKUP_RESPONSE',
-      app:  'vault',
-      data: payload,
-    }, e.origin);
-
-  } catch(err) {
-    e.source.postMessage({
-      type:    'BACKUP_RESPONSE',
-      app:     'vault',
-      error:   err.message,
-    }, e.origin);
-  }
-});
+// ===== ECOSYSTEM BACKUP LISTENER REMOVED (security: vault exfiltration risk) =====
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', ()=>{

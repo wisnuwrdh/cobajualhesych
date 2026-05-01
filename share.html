@@ -293,6 +293,10 @@ async function doUnlock(){
   }
 }
 
+// C3 FIX: renderResult now builds DOM with createElement + textContent/addEventListener.
+// No user-controlled data is ever interpolated into HTML strings or inline onclick attributes.
+const _fieldValues = {}; // store values by field id for safe access
+
 function renderResult(payload){
   document.getElementById('resultTitle').textContent = payload.title || 'Shared Item';
 
@@ -302,20 +306,48 @@ function renderResult(payload){
   if(payload.notes) fields.push({label:'NOTES', value:payload.notes, type:'text', id:'notes'});
   if(payload.totp) fields.push({label:'2FA SECRET', value:payload.totp, type:'password', id:'totp'});
 
-  document.getElementById('resultFields').innerHTML = fields.map(f=>`
-    <div class="field-row">
-      <div class="field-row-label">${f.label}</div>
-      <div class="field-row-value${f.type==='password'?' masked':''}" id="val-${f.id}">
-        ${f.type==='password'?'••••••••':escHtml(f.value)}
-        ${f.type==='password'?`
-          <button class="reveal-btn" onclick="toggleReveal('${f.id}','${escHtml(f.value).replace(/'/g,"\\'")}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>`:''}
-        <button class="copy-btn" onclick="copyField('${escHtml(f.value).replace(/'/g,"\\'")}',this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
-      </div>
-    </div>`).join('');
+  const container = document.getElementById('resultFields');
+  container.innerHTML = '';
+
+  fields.forEach(f => {
+    // Store value safely — never in DOM attributes
+    _fieldValues[f.id] = f.value;
+
+    const row = document.createElement('div');
+    row.className = 'field-row';
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'field-row-label';
+    labelEl.textContent = f.label; // safe: label is hardcoded above, not user data
+
+    const valueEl = document.createElement('div');
+    valueEl.className = 'field-row-value' + (f.type === 'password' ? ' masked' : '');
+    valueEl.id = 'val-' + f.id;
+
+    // Text node for the value display
+    const textNode = document.createTextNode(f.type === 'password' ? '••••••••' : f.value);
+    valueEl.appendChild(textNode);
+
+    // Reveal button (password fields only)
+    if(f.type === 'password'){
+      const revealBtn = document.createElement('button');
+      revealBtn.className = 'reveal-btn';
+      revealBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+      revealBtn.addEventListener('click', () => toggleReveal(f.id));
+      valueEl.appendChild(revealBtn);
+    }
+
+    // Copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    copyBtn.addEventListener('click', () => copyField(f.id, copyBtn));
+    valueEl.appendChild(copyBtn);
+
+    row.appendChild(labelEl);
+    row.appendChild(valueEl);
+    container.appendChild(row);
+  });
 
   // Expiry countdown
   if(payload.exp){
@@ -330,12 +362,17 @@ function renderResult(payload){
       : `Expires in ${mins} minutes`;
   }
 
+  // C3 FIX: strip URL fragment from address bar after successful decrypt
+  // Prevents encrypted bundle from staying in browser history
+  history.replaceState(null, '', location.pathname);
+
   showState('stateResult');
 }
 
-function toggleReveal(id, value){
+function toggleReveal(id){
   const el = document.getElementById('val-'+id);
   if(!el) return;
+  const value = _fieldValues[id] || '';
   if(_revealed.has(id)){
     _revealed.delete(id);
     el.classList.add('masked');
@@ -347,7 +384,8 @@ function toggleReveal(id, value){
   }
 }
 
-async function copyField(value, btn){
+async function copyField(id, btn){
+  const value = _fieldValues[id] || '';
   try{
     await navigator.clipboard.writeText(value);
     const orig = btn.innerHTML;
