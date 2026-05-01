@@ -211,6 +211,8 @@ svg{display:block;flex-shrink:0}
   pointer-events:none;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes syncSpin{to{transform:rotate(360deg)}}
+.sync-spinning{animation:syncSpin .8s linear infinite}
 .spinner{
   width:14px;height:14px;
   border:2px solid rgba(255,255,255,.3);
@@ -2224,6 +2226,10 @@ svg{display:block;flex-shrink:0}
       <button class="icon-btn" id="bioToggleBtn" onclick="toggleBiometric()" style="display:none">
         <svg width="15" height="15" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.7,37.3V21.9a7.7,7.7,0,0,0-15.4,0V37.3a10.7,10.7,0,0,0,4,8.3,1.8,1.8,0,0,0,.9.4,1.4,1.4,0,0,0,1.2-.6,1.5,1.5,0,0,0-.2-2.2,7.4,7.4,0,0,1-2.8-5.9V21.9a4.6,4.6,0,0,1,9.2,0V37.3a1.5,1.5,0,0,1-1.5,1.5,1.6,1.6,0,0,1-1.6-1.5V21.9a1.5,1.5,0,0,0-3,0V37.6a4.6,4.6,0,0,0,4.6,4.3,4.7,4.7,0,0,0,4.6-4.3Z" fill="currentColor"/><path d="M24,8.1A13.8,13.8,0,0,0,10.2,21.9V37.3a17,17,0,0,0,1.9,7.9,1.6,1.6,0,0,0,1.4.8l.7-.2a1.6,1.6,0,0,0,.6-2.1,14.1,14.1,0,0,1-1.6-6.4V21.9a10.8,10.8,0,0,1,21.6,0V37.3a7.9,7.9,0,0,1-2.9,6,1.4,1.4,0,0,0-.2,2.1,1.4,1.4,0,0,0,1.2.6,1.6,1.6,0,0,0,.9-.3,10.6,10.6,0,0,0,4-8.4V21.9A13.8,13.8,0,0,0,24,8.1Z" fill="currentColor"/><path d="M24,2A20,20,0,0,0,4,21.9V40.4a1.5,1.5,0,0,0,1.5,1.5,1.6,1.6,0,0,0,1.6-1.5V21.9a16.9,16.9,0,0,1,33.8,0V37.3a12.9,12.9,0,0,1-1.6,6.4,1.5,1.5,0,0,0,.7,2.1l.7.2a1.4,1.4,0,0,0,1.3-.8A16.5,16.5,0,0,0,44,38V21.9A20,20,0,0,0,24,2Z" fill="currentColor"/></svg>
       </button>
+      <!-- Cloud Sync -->
+      <button class="icon-btn" id="syncBtn" onclick="manualSync()" title="Sync vault" style="display:none">
+        <svg id="syncIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
       <!-- Lock -->
       <button class="icon-btn" onclick="lockVault()" data-i18n-title="app.lockTitle">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -3485,6 +3491,8 @@ async function unlock(){
     if(isBiometricSupported()) await setBioSession(pw);
     showApp();
     updateBioUI();
+    updateSyncUI();
+    syncOnUnlock(); // auto-download cloud vault jika premium
   }catch(e){
     setMsg('Error: '+e.message,'err');
     clearLoading(isSetup ? t('lock.createBtn') : t('lock.unlockBtn'));
@@ -4530,7 +4538,7 @@ async function saveItem(){
       });
       showToast(t('toast.added'),'ok');
     }
-    closeModal(); render();
+    closeModal(); render(); autoUpload();
   }catch(e){ showToast(t('toast.importFail',{msg:e.message}),'err'); }
 }
 
@@ -4560,6 +4568,7 @@ async function confirmDelete(){
   await dbDelete(id);
   await histDeleteAll(id); // clean up history for deleted item
   _items = _items.filter(i=>i.id!==id);
+  autoUpload();
   _expanded.delete(id);
   _revealed.delete(id);
   showToast(t('toast.deleted'));
@@ -6927,6 +6936,7 @@ function updatePremiumUI(){
   const label = document.getElementById('licenseMenuLabel');
   if(label) label.setAttribute('data-i18n', premium ? 'premium.manageItem' : 'premium.menuItem');
   if(label) label.textContent = t(premium ? 'premium.manageItem' : 'premium.menuItem');
+  updateSyncUI();
 }
 
 // ===== LICENSE SHEET UI =====
@@ -7202,6 +7212,195 @@ async function runVaultHealth(){
 
 
 
+
+
+// ===== CLOUD SYNC =====
+const _SYNC_TS_KEY = 'hesych_sync_ts';
+let _syncInProgress = false;
+
+function getSyncBtn(){ return document.getElementById('syncBtn'); }
+function getSyncIcon(){ return document.getElementById('syncIcon'); }
+
+function updateSyncUI(){
+  const btn = getSyncBtn();
+  if(!btn) return;
+  btn.style.display = isPremium() ? 'flex' : 'none';
+}
+
+function setSyncSpinning(on){
+  const icon = getSyncIcon();
+  if(!icon) return;
+  if(on) icon.classList.add('sync-spinning');
+  else icon.classList.remove('sync-spinning');
+}
+
+async function encryptVaultForSync(){
+  // Ambil semua raw items dari IndexedDB (masih encrypted)
+  const raw = await dbAll();
+  const salt = localStorage.getItem('vault_salt') || '';
+  const payload = JSON.stringify({ v: 1, salt, items: raw, ts: Date.now() });
+  return payload;
+}
+
+async function decryptVaultFromSync(payload){
+  try{
+    const obj = JSON.parse(payload);
+    return obj;
+  }catch(e){ return null; }
+}
+
+async function uploadVault(){
+  if(!isPremium()) return { success: false };
+  const license = localStorage.getItem('vault_license');
+  const deviceId = getDeviceId();
+  if(!license || !deviceId) return { success: false };
+
+  const encryptedVault = await encryptVaultForSync();
+  const localUpdatedAt = new Date().toISOString();
+  localStorage.setItem(_SYNC_TS_KEY, localUpdatedAt);
+
+  try{
+    const res = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license, deviceId, action: 'upload', encryptedVault, localUpdatedAt })
+    });
+    const data = await res.json();
+    return data;
+  }catch(e){
+    return { success: false, error: e.message };
+  }
+}
+
+async function downloadVault(){
+  if(!isPremium()) return null;
+  const license = localStorage.getItem('vault_license');
+  const deviceId = getDeviceId();
+  if(!license || !deviceId) return null;
+
+  try{
+    const res = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license, deviceId, action: 'download' })
+    });
+    const data = await res.json();
+    if(!data.found) return null;
+    return data;
+  }catch(e){ return null; }
+}
+
+async function applyCloudVault(cloudData){
+  // Restore items dari cloud ke IndexedDB
+  try{
+    const obj = await decryptVaultFromSync(cloudData.encryptedVault);
+    if(!obj || !obj.items) return false;
+
+    // Hapus semua items lokal, replace dengan cloud
+    const d = await openDB();
+    await new Promise((res, rej) => {
+      const tx = d.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).clear();
+      tx.oncomplete = res;
+      tx.onerror = rej;
+    });
+
+    // Insert semua items dari cloud
+    await new Promise((res, rej) => {
+      const tx = d.transaction(STORE, 'readwrite');
+      const store = tx.objectStore(STORE);
+      obj.items.forEach(item => store.put(item));
+      tx.oncomplete = res;
+      tx.onerror = rej;
+    });
+
+    // Update salt jika berbeda
+    if(obj.salt) localStorage.setItem('vault_salt', obj.salt);
+    localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
+
+    return true;
+  }catch(e){
+    console.error('applyCloudVault error:', e);
+    return false;
+  }
+}
+
+async function manualSync(){
+  if(_syncInProgress) return;
+  if(!isPremium()){ showToast('Premium required for sync'); return; }
+  _syncInProgress = true;
+  setSyncSpinning(true);
+
+  try{
+    // Cek cloud dulu
+    const cloudData = await downloadVault();
+    if(cloudData){
+      const localTs = localStorage.getItem(_SYNC_TS_KEY);
+      const cloudTs = cloudData.updatedAt;
+      const cloudNewer = !localTs || new Date(cloudTs) > new Date(localTs);
+
+      if(cloudNewer){
+        // Cloud lebih baru — download dan apply
+        const ok = await applyCloudVault(cloudData);
+        if(ok){
+          await loadItems();
+          render();
+          showToast('Vault synced from cloud', 'ok');
+          localStorage.setItem(_SYNC_TS_KEY, cloudTs);
+        } else {
+          showToast('Sync failed', 'error');
+        }
+      } else {
+        // Lokal lebih baru — upload
+        const result = await uploadVault();
+        if(result.success) showToast('Vault uploaded to cloud', 'ok');
+        else showToast('Upload failed', 'error');
+      }
+    } else {
+      // Belum ada di cloud — upload sekarang
+      const result = await uploadVault();
+      if(result.success) showToast('Vault uploaded to cloud', 'ok');
+      else showToast('Upload failed', 'error');
+    }
+  }catch(e){
+    showToast('Sync error', 'error');
+  }finally{
+    _syncInProgress = false;
+    setSyncSpinning(false);
+  }
+}
+
+// Auto-upload setiap ada perubahan vault
+async function autoUpload(){
+  if(!isPremium()) return;
+  // Debounce 3 detik
+  clearTimeout(autoUpload._timer);
+  autoUpload._timer = setTimeout(async () => {
+    await uploadVault();
+  }, 3000);
+}
+
+// Auto-download saat pertama unlock (kalau premium)
+async function syncOnUnlock(){
+  if(!isPremium()) return;
+  setSyncSpinning(true);
+  try{
+    const cloudData = await downloadVault();
+    if(!cloudData) return;
+    const localTs = localStorage.getItem(_SYNC_TS_KEY);
+    const cloudNewer = !localTs || new Date(cloudData.updatedAt) > new Date(localTs);
+    if(cloudNewer){
+      const ok = await applyCloudVault(cloudData);
+      if(ok){
+        await loadItems();
+        render();
+        showToast('Vault synced from cloud', 'ok');
+        localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
+      }
+    }
+  }catch(e){}
+  finally{ setSyncSpinning(false); }
+}
 
 // ===== TOAST =====
 let _toastTimer=null;
