@@ -6856,26 +6856,36 @@ function getLicensePayload(){
   }catch(e){ return null; }
 }
 
+function getDeviceId(){
+  let id = localStorage.getItem('hesych_device_id');
+  if(!id){
+    id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('hesych_device_id', id);
+  }
+  return id;
+}
+
 async function activateLicense(key){
   key = key.trim();
-  if(!key) return false;
+  if(!key) return { ok: false };
   try{
-    // Send key to server for HMAC verification — secret never leaves server
     const res = await fetch('/api/verify-license', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ license: key })
+      body: JSON.stringify({ license: key, deviceId: getDeviceId() })
     });
-    if(!res.ok) return false;
+    if(!res.ok) return { ok: false };
     const data = await res.json();
-    if(!data.valid) return false;
+    if(!data.valid){
+      return { ok: false, deviceLimitReached: data.deviceLimitReached, error: data.error };
+    }
     // Server confirmed valid — save to localStorage
     localStorage.setItem(_LICENSE_KEY, key);
     localStorage.setItem(_LICENSE_KEY + '_verified', '1');
     localStorage.setItem(_LICENSE_KEY + '_at', Date.now().toString());
     updatePremiumUI();
-    return true;
-  }catch(e){ return false; }
+    return { ok: true };
+  }catch(e){ return { ok: false }; }
 }
 
 function deactivateLicense(){
@@ -6885,7 +6895,18 @@ function deactivateLicense(){
     desc: t('premium.deactivateConfirm'),
     okText: 'Yes, Remove',
     cancelText: 'Cancel',
-    onOk: () => {
+    onOk: async () => {
+      const key = localStorage.getItem(_LICENSE_KEY);
+      const deviceId = getDeviceId();
+      if(key){
+        try{
+          await fetch('/api/verify-license', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ license: key, deviceId, action: 'remove' })
+          });
+        }catch(e){}
+      }
       localStorage.removeItem(_LICENSE_KEY);
       localStorage.removeItem(_LICENSE_KEY + '_verified');
       localStorage.removeItem(_LICENSE_KEY + '_at');
@@ -6984,12 +7005,15 @@ async function doActivateLicense(){
     return;
   }
   if(btn){ btn.disabled=true; btn.textContent=t('premium.activating'); }
-  const ok = await activateLicense(input.value.trim());
-  if(ok){
+  const result = await activateLicense(input.value.trim());
+  if(result.ok){
     showToast(t('premium.activated'), 'ok');
     renderLicenseSheet();
   } else {
-    if(msg) msg.textContent = t('premium.invalidKey');
+    const errMsg = result.deviceLimitReached
+      ? 'Device limit reached (max 3). Remove license from another device first.'
+      : (result.error || t('premium.invalidKey'));
+    if(msg) msg.textContent = errMsg;
     if(input) input.style.borderColor = 'var(--danger)';
     if(btn){ btn.disabled=false; btn.textContent=t('premium.activateBtn'); }
   }
