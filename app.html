@@ -3495,6 +3495,7 @@ async function unlock(){
     showApp();
     updateBioUI();
     updateSyncUI();
+    verifyDeviceRegistration(); // cek apakah device masih terdaftar
     syncOnUnlock(); // auto-download cloud vault jika premium
   }catch(e){
     setMsg('Error: '+e.message,'err');
@@ -7516,6 +7517,32 @@ async function autoUpload(){
   }, 3000);
 }
 
+// Verifikasi apakah device masih terdaftar di Supabase
+async function verifyDeviceRegistration(){
+  if(!isPremium()) return;
+  const license = localStorage.getItem(_LICENSE_KEY);
+  const deviceId = getDeviceId();
+  if(!license || !deviceId) return;
+  try{
+    const res = await fetch('/api/verify-license', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license, deviceId, action: 'list' })
+    });
+    const data = await res.json();
+    const devices = data.devices || [];
+    const stillRegistered = devices.some(d => d.device_id === deviceId);
+    if(!stillRegistered){
+      // Device sudah tidak terdaftar — hapus license dari localStorage
+      localStorage.removeItem(_LICENSE_KEY);
+      localStorage.removeItem(_LICENSE_KEY + '_verified');
+      localStorage.removeItem(_LICENSE_KEY + '_at');
+      updatePremiumUI();
+      showToast('License was removed from this device.', 'warn');
+    }
+  }catch(e){}
+}
+
 // Auto-download saat pertama unlock (kalau premium)
 async function syncOnUnlock(){
   if(!isPremium()) return;
@@ -7535,11 +7562,11 @@ function showSyncImportModal(cloudData){
   showConfirm({
     icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
     title: 'Cloud Vault Found',
-    desc: 'A newer vault was found in the cloud. Enter your master password to import it to this device.',
+    desc: 'A newer vault was found in the cloud. Enter the master password from your other device (the one that last synced) to import it here.',
     okText: 'Import',
     cancelText: 'Skip',
     showInput: true,
-    inputPlaceholder: 'Master password',
+    inputPlaceholder: 'Master password from your other device',
     inputType: 'password',
     onOk: async (masterPw) => {
       if(!masterPw){ showToast('Master password required', 'error'); return; }
@@ -7550,7 +7577,9 @@ function showSyncImportModal(cloudData){
         render();
         showToast('Vault imported from cloud!', 'ok');
       } else {
-        showToast('Import failed. Wrong password?', 'error');
+        showToast('Wrong password. Enter the master password from your other device, not this device.', 'error');
+        // Tampilkan modal lagi biar user bisa coba ulang
+        setTimeout(()=>{ showSyncImportModal(cloudData); }, 2500);
       }
     }
   });
