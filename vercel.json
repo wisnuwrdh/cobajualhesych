@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/(index|app|upgrade|share).html",
+      "source": "/(index|app|upgrade|share|privacy|terms).html",
       "headers": [
         {
           "key": "Cache-Control",
