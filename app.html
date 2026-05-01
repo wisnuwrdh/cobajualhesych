@@ -1284,7 +1284,7 @@ svg{display:block;flex-shrink:0}
 .gen-toggle input:checked + .gen-toggle-slider{background:var(--accent)}
 .gen-toggle input:checked + .gen-toggle-slider:before{transform:translateX(16px)}
 .gen-separator-input{
-  width:48px;padding:5px 8px;text-align:center;
+  width:72px;padding:5px 8px;text-align:center;
   border-radius:6px;border:1px solid var(--border);
   background:var(--card);color:var(--text);
   font-family:var(--mono);font-size:13px;outline:none;
@@ -2824,7 +2824,7 @@ const STRINGS = {
     'detail.username':'Username','detail.password':'Password','detail.notes':'Notes',
     'detail.copyPw':'Copy PW','detail.fav':'Favorite','detail.unfav':'Unpin',
     'detail.edit':'Edit','detail.delete':'Delete',
-    'detail.lockSecret':'Hide for a While',
+    'detail.lockSecret':'Hide',
     'detail.locked':'🔒 Hidden until {time}. You set this intentionally',
     'card.locked':'🔒 Hidden',
     'section.favs':'★ Favorites','section.all':'All',
@@ -4023,7 +4023,7 @@ function renderCard(item, idx){
           <span style="font-size:11px">${t('detail.lockSecret')}</span>
         </button>
         ${isPremium() ? `<button class="act-btn-icon" onclick="openHistorySheet(${item.id});event.stopPropagation()" style="color:var(--accent);border-color:var(--accent-dim)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3 11 8 11"/></svg>
+          <svg width="12" height="12" viewBox="0 0 490 490" fill="currentColor"><path d="M245,15.313c126.65,0,229.688,103.038,229.688,229.687S371.65,474.688,245,474.688S15.313,371.65,15.313,245S118.35,15.313,245,15.313 M245,0C109.688,0,0,109.69,0,245s109.688,245,245,245s245-109.69,245-245S380.311,0,245,0L245,0z"/><polygon points="370.61,379.523 237.344,246.256 237.344,58.289 252.656,58.289 252.656,239.916 381.437,368.696"/></svg>
           <span style="font-size:11px">History</span>
         </button>` : ''}
       </div>
@@ -4236,7 +4236,7 @@ async function openDetailPanel(id){
         ${t('detail.lockSecret')}
       </button>
       ${isPremium() ? `<button class="detail-panel-btn accent" onclick="openHistorySheet(${id})">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3 11 8 11"/></svg>
+        <svg width="12" height="12" viewBox="0 0 490 490" fill="currentColor"><path d="M245,15.313c126.65,0,229.688,103.038,229.688,229.687S371.65,474.688,245,474.688S15.313,371.65,15.313,245S118.35,15.313,245,15.313 M245,0C109.688,0,0,109.69,0,245s109.688,245,245,245s245-109.69,245-245S380.311,0,245,0L245,0z"/><polygon points="370.61,379.523 237.344,246.256 237.344,58.289 252.656,58.289 252.656,239.916 381.437,368.696"/></svg>
         History
       </button>` : ''}
     </div>
@@ -6224,6 +6224,19 @@ function regenGen(){
   _renderGenBody();
 }
 
+function _updateGenPreview(){
+  _genState.currentPw = generateOne();
+  const el = document.getElementById('genPreviewPw');
+  if(el) el.textContent = _genState.currentPw;
+  // update sub-label separator preview
+  const sepInput = document.getElementById('genSeparatorInput');
+  const subLabel = sepInput?.closest('.gen-option-row')?.querySelector('.gen-option-sub');
+  if(subLabel){
+    const sep = esc(_genState.separator)||'-';
+    subLabel.textContent = `e.g. word${sep}word${sep}word`;
+  }
+}
+
 function _renderGenBody(){
   const s = _genState;
   const isPro = isPremium();
@@ -6303,8 +6316,9 @@ function _renderGenBody(){
           <div class="gen-option-label">${t('gen.separator')}</div>
           <div class="gen-option-sub">e.g. word${esc(s.separator)}word${esc(s.separator)}word</div>
         </div>
-        <input class="gen-separator-input" maxlength="3" value="${esc(s.separator)}"
-          oninput="_genState.separator=this.value||'-';regenGen()"/>
+        <input class="gen-separator-input" id="genSeparatorInput" maxlength="10" value="${esc(s.separator)}"
+          oninput="_genState.separator=this.value;_updateGenPreview()"
+          onblur="if(!this.value){this.value='-';_genState.separator='-';_updateGenPreview()}"/>
       </div>
       <div class="gen-option-row">
         <div class="gen-option-label">${t('gen.capitalize')}</div>
