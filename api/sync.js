@@ -71,6 +71,13 @@ async function isDeviceRegistered(licenseKey, deviceId) {
 
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
+  // M8 FIX: reject requests from non-hesych.com origins (defense in depth)
+  const origin = req.headers['origin'];
+  const allowedOrigins = ['https://hesych.com', 'https://www.hesych.com'];
+  if (origin && !allowedOrigins.includes(origin)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

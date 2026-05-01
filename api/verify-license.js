@@ -65,6 +65,13 @@ async function removeDevice(licenseKey, deviceId) {
 
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
+  // M8 FIX: reject requests from non-hesych.com origins (defense in depth)
+  const origin = req.headers['origin'];
+  const allowedOrigins = ['https://hesych.com', 'https://www.hesych.com'];
+  if (origin && !allowedOrigins.includes(origin)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -83,16 +90,23 @@ export default async function handler(req, res) {
 
   const key = license.trim();
 
+  // H9 FIX: action=list and action=remove now verify device ownership before proceeding
   // Handle list devices
   if (action === 'list') {
     if (!deviceId) return res.status(400).json({ error: 'Missing deviceId' });
     const devices = await getDevices(key);
+    // Only return device list if requesting device is already registered
+    const isRegistered = devices.some(d => d.device_id === deviceId);
+    if (!isRegistered) return res.status(403).json({ error: 'Device not authorized for this license' });
     return res.status(200).json({ devices });
   }
 
   // Handle remove device
   if (action === 'remove') {
     if (!deviceId) return res.status(400).json({ error: 'Missing deviceId' });
+    // Verify license is still valid before allowing removal
+    const gumroadCheck = await verifyGumroadKey(key);
+    if (!gumroadCheck.valid) return res.status(403).json({ error: 'Invalid license' });
     await removeDevice(key, deviceId);
     return res.status(200).json({ success: true });
   }
@@ -124,9 +138,14 @@ export default async function handler(req, res) {
     });
   }
 
-  // Daftarkan device baru
-  const name = deviceName || getAutoDeviceName(req);
-  await addDevice(key, deviceId, name);
+  // C2 FIX: sanitize deviceName — whitelist safe characters only, max 64 chars
+  const rawName = typeof deviceName === 'string' ? deviceName : '';
+  const safeName = rawName
+    .slice(0, 64)
+    .replace(/[^\w\s\-(). ]/g, '')
+    .trim() || getAutoDeviceName(req);
+
+  await addDevice(key, deviceId, safeName);
   return res.status(200).json({ valid: true });
 }
 
