@@ -1,14 +1,18 @@
 // api/verify-license.js — Vercel Serverless Function
-// Verifies Gumroad license keys via Gumroad API
+// Verifies Gumroad license keys + device limit (max 3) via Supabase
 //
 // Required env vars:
-//   GUMROAD_PRODUCT_ID   — Product ID dari Gumroad dashboard
+//   GUMROAD_PRODUCT_ID        — Product ID dari Gumroad dashboard
+//   SUPABASE_URL              — Supabase project URL
+//   SUPABASE_SERVICE_ROLE_KEY — Supabase service role key
+
+const MAX_DEVICES = 3;
 
 // Simple in-memory rate limiter — max 10 attempts per IP per 15 minutes
 const _rateMap = new Map();
 function isRateLimited(ip) {
   const now = Date.now();
-  const window = 15 * 60 * 1000; // 15 menit
+  const window = 15 * 60 * 1000;
   const max = 10;
   const entry = _rateMap.get(ip) || { count: 0, start: now };
   if (now - entry.start > window) {
@@ -20,6 +24,46 @@ function isRateLimited(ip) {
   return entry.count > max;
 }
 
+// ── Supabase helper ───────────────────────────────────────────────────────
+function supabase() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+    'Prefer': 'return=representation',
+  };
+  return { url, headers };
+}
+
+async function getDevices(licenseKey) {
+  const { url, headers } = supabase();
+  const res = await fetch(
+    `${url}/rest/v1/license_devices?license_key=eq.${encodeURIComponent(licenseKey)}&select=device_id`,
+    { headers }
+  );
+  return await res.json(); // array of { device_id }
+}
+
+async function addDevice(licenseKey, deviceId) {
+  const { url, headers } = supabase();
+  await fetch(`${url}/rest/v1/license_devices`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ license_key: licenseKey, device_id: deviceId }),
+  });
+}
+
+async function removeDevice(licenseKey, deviceId) {
+  const { url, headers } = supabase();
+  await fetch(
+    `${url}/rest/v1/license_devices?license_key=eq.${encodeURIComponent(licenseKey)}&device_id=eq.${encodeURIComponent(deviceId)}`,
+    { method: 'DELETE', headers }
+  );
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -31,30 +75,64 @@ export default async function handler(req, res) {
     return res.status(429).json({ valid: false, error: 'Too many attempts. Try again later.' });
   }
 
-  const { license } = req.body;
+  const { license, deviceId, action } = req.body;
 
   if (!license || typeof license !== 'string') {
     return res.status(400).json({ valid: false, error: 'Missing license key' });
   }
+  if (!deviceId || typeof deviceId !== 'string') {
+    return res.status(400).json({ valid: false, error: 'Missing device ID' });
+  }
 
   const key = license.trim();
 
-  return await verifyGumroadKey(key, res);
+  // Handle remove device (saat user hapus license di device)
+  if (action === 'remove') {
+    await removeDevice(key, deviceId);
+    return res.status(200).json({ success: true });
+  }
+
+  // Verify via Gumroad
+  const gumroadResult = await verifyGumroadKey(key);
+  if (!gumroadResult.valid) {
+    return res.status(200).json(gumroadResult);
+  }
+
+  // Device limit check
+  const devices = await getDevices(key);
+  const existingDevice = devices.find(d => d.device_id === deviceId);
+
+  if (existingDevice) {
+    // Device sudah terdaftar — re-aktivasi, langsung valid
+    return res.status(200).json({ valid: true });
+  }
+
+  if (devices.length >= MAX_DEVICES) {
+    return res.status(200).json({
+      valid: false,
+      error: `Device limit reached. Maximum ${MAX_DEVICES} devices allowed. Remove a device first.`,
+      deviceLimitReached: true,
+    });
+  }
+
+  // Daftarkan device baru
+  await addDevice(key, deviceId);
+  return res.status(200).json({ valid: true });
 }
 
 // ── Verify via Gumroad API ────────────────────────────────────────────────
-async function verifyGumroadKey(licenseKey, res) {
+async function verifyGumroadKey(licenseKey) {
   const productId = process.env.GUMROAD_PRODUCT_ID;
   if (!productId) {
     console.error('GUMROAD_PRODUCT_ID env var not set');
-    return res.status(500).json({ valid: false, error: 'Server misconfiguration' });
+    return { valid: false, error: 'Server misconfiguration' };
   }
 
   try {
     const body = new URLSearchParams();
     body.append('product_id', productId);
     body.append('license_key', licenseKey);
-    body.append('increment_uses_count', 'false'); // jangan increment, hanya verifikasi
+    body.append('increment_uses_count', 'false');
 
     const response = await fetch('https://api.gumroad.com/v2/licenses/verify', {
       method: 'POST',
@@ -64,32 +142,22 @@ async function verifyGumroadKey(licenseKey, res) {
     const data = await response.json();
 
     if (!data.success) {
-      console.warn('Gumroad verification failed:', data.message);
-      return res.status(200).json({ valid: false });
+      return { valid: false };
     }
-
-    // Pastikan bukan test purchase
     if (data.purchase?.test) {
-      console.warn('Test purchase rejected');
-      return res.status(200).json({ valid: false, error: 'Test purchases are not valid.' });
+      return { valid: false, error: 'Test purchases are not valid.' };
     }
-
-    // Pastikan tidak di-refund
     if (data.purchase?.refunded) {
-      console.warn('Refunded purchase rejected');
-      return res.status(200).json({ valid: false, error: 'This license has been refunded.' });
+      return { valid: false, error: 'This license has been refunded.' };
     }
-
-    // Pastikan tidak di-chargebacked
     if (data.purchase?.chargebacked) {
-      console.warn('Chargebacked purchase rejected');
-      return res.status(200).json({ valid: false });
+      return { valid: false };
     }
 
-    return res.status(200).json({ valid: true });
+    return { valid: true };
 
   } catch (err) {
     console.error('Gumroad license verification error:', err);
-    return res.status(500).json({ valid: false, error: 'Verification failed' });
+    return { valid: false, error: 'Verification failed' };
   }
 }
