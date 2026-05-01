@@ -4890,6 +4890,11 @@ function showResetConfirm(){
       localStorage.removeItem('vault_ver');
       localStorage.removeItem('vault_bio_cred_id');
       localStorage.removeItem('vault_bio_enabled');
+      localStorage.removeItem('vault_license');
+      localStorage.removeItem('vault_license_verified');
+      localStorage.removeItem('vault_license_at');
+      localStorage.removeItem('hesych_device_id');
+      localStorage.removeItem('hesych_sync_ts');
       clearBioSession();
       const newSalt = crypto.getRandomValues(new Uint8Array(16));
       localStorage.setItem('vault_salt', bufToB64(newSalt));
@@ -6898,6 +6903,7 @@ async function activateLicense(key){
     localStorage.setItem(_LICENSE_KEY + '_verified', '1');
     localStorage.setItem(_LICENSE_KEY + '_at', Date.now().toString());
     updatePremiumUI();
+    syncOnUnlock(); // auto-download cloud vault setelah aktivasi license
     return { ok: true };
   }catch(e){ return { ok: false }; }
 }
