@@ -6985,6 +6985,10 @@ function renderLicenseSheet(){
       </div>
       <button class="btn-deactivate" style="width:100%;padding:11px;justify-content:center;display:flex" onclick="deactivateLicense()">
         ${t('premium.deactivateBtn')}
+      </button>
+      <button onclick="forceSyncUpload()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--sub);cursor:pointer;font-family:var(--sans);font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Force Upload Vault
       </button>`;
     loadDeviceList();
   } else {
@@ -7020,6 +7024,13 @@ function renderLicenseSheet(){
       <div id="licenseMsg" style="font-size:12px;min-height:14px;margin-bottom:8px;color:var(--danger)"></div>
       <button class="btn-save" id="licenseActivateBtn" onclick="doActivateLicense()" style="width:100%">${t('premium.activateBtn')}</button>`;
   }
+}
+
+async function forceSyncUpload(){
+  showToast('Uploading vault...', '');
+  const result = await uploadVault();
+  if(result && result.success) showToast('Vault uploaded!', 'ok');
+  else showToast('Upload failed', 'error');
 }
 
 async function loadDeviceList(){
