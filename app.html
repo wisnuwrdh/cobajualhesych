@@ -7494,22 +7494,27 @@ async function manualSync(){
       const localTs = localStorage.getItem(_SYNC_TS_KEY);
       const cloudTs = cloudData.updatedAt;
       const cloudNewer = !localTs || new Date(cloudTs) > new Date(localTs);
+      const localEmpty = _items.length === 0;
 
-      if(cloudNewer){
-        // Cloud lebih baru — minta master password dulu
+      if(cloudNewer || localEmpty){
+        // Cloud lebih baru ATAU lokal kosong — download dari cloud
         showSyncImportModal(cloudData);
         return;
       } else {
-        // Lokal lebih baru — upload
+        // Lokal lebih baru dan tidak kosong — upload
         const result = await uploadVault();
         if(result.success) showToast('Vault uploaded to cloud', 'ok');
         else showToast('Upload failed', 'error');
       }
     } else {
-      // Belum ada di cloud — upload sekarang
-      const result = await uploadVault();
-      if(result.success) showToast('Vault uploaded to cloud', 'ok');
-      else showToast('Upload failed', 'error');
+      // Belum ada di cloud — upload kalau ada data, skip kalau kosong
+      if(_items.length === 0){
+        showToast('No data to upload', '');
+      } else {
+        const result = await uploadVault();
+        if(result.success) showToast('Vault uploaded to cloud', 'ok');
+        else showToast('Upload failed', 'error');
+      }
     }
   }catch(e){
     showToast('Sync error', 'error');
@@ -7525,7 +7530,7 @@ async function autoUpload(){
   // Debounce 3 detik
   clearTimeout(autoUpload._timer);
   autoUpload._timer = setTimeout(async () => {
-    await uploadVault();
+    if(_items.length > 0) await uploadVault();
   }, 3000);
 }
 
@@ -7563,11 +7568,51 @@ async function syncOnUnlock(){
     if(!cloudData) return;
     const localTs = localStorage.getItem(_SYNC_TS_KEY);
     const cloudNewer = !localTs || new Date(cloudData.updatedAt) > new Date(localTs);
+    const localEmpty = _items.length === 0;
+
     if(cloudNewer){
-      // Tampilkan modal minta master password untuk import vault dari cloud
       showSyncImportModal(cloudData);
+    } else if(localEmpty){
+      // Vault kosong tapi cloud ada data — tampilkan banner
+      showCloudBanner(cloudData);
     }
   }catch(e){}
+}
+
+function showCloudBanner(cloudData){
+  // Hapus banner lama kalau ada
+  const existing = document.getElementById('cloudBanner');
+  if(existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'cloudBanner';
+  banner.style.cssText = `
+    margin: 8px 16px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    background: var(--accent-glow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+  `;
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;flex:1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      <span style="color:var(--sub);font-size:12px">Cloud vault available</span>
+    </div>
+    <button onclick="showSyncImportModal(window._pendingCloudData);document.getElementById('cloudBanner').remove()" style="font-size:12px;padding:5px 12px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:var(--sans);font-weight:500;white-space:nowrap">Import</button>
+    <button onclick="document.getElementById('cloudBanner').remove()" style="background:none;border:none;color:var(--dim);cursor:pointer;padding:2px;font-size:16px;line-height:1">×</button>
+  `;
+  window._pendingCloudData = cloudData;
+
+  // Insert sebelum filter bar
+  const filterBar = document.querySelector('.filter-bar');
+  if(filterBar) filterBar.insertAdjacentElement('beforebegin', banner);
+  else document.getElementById('app').prepend(banner);
 }
 
 function showSyncImportModal(cloudData){
