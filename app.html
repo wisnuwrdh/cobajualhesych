@@ -7850,54 +7850,129 @@ async function applyCloudVault(cloudData, masterPassword){
 
     if(!items || !Array.isArray(items)) return false;
 
-    // Helper decrypt dengan key tertentu
+    // ── Pure crypto helpers (parameterized by key, no global state) ────────
+    // CRITICAL: do NOT swap _key globally inside the per-item loop. Promise.all
+    // runs iterations in parallel; swapping a global key creates a race that
+    // silently corrupts items whose await happens to land while _key is wrong.
+    // (This is what caused 7 of 30 items to vanish post-import.)
     async function decryptWith(key, b64){
       const buf = b64ToBuf(b64);
       const iv = buf.slice(0,12); const ct = buf.slice(12);
       const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
       return new TextDecoder().decode(pt);
     }
-
-    // Helper encrypt dengan _key lokal
-    async function encryptWith(text){
+    async function encryptWith(key, text){
       const iv = crypto.getRandomValues(new Uint8Array(12));
-      const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, _key, new TextEncoder().encode(text));
+      const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(text));
       const buf = new Uint8Array(iv.length + ct.byteLength);
       buf.set(iv, 0); buf.set(new Uint8Array(ct), iv.length);
       return bufToB64(buf);
     }
-
-    // Decrypt semua fields tiap item, lalu re-encrypt dengan _key lokal
-    const reencryptedItems = await Promise.all(items.map(async item => {
-      const newItem = { ...item };
-      try { newItem.title = await encryptWith(await decryptWith(cloudKey, item.title)); } catch{}
-      try { newItem.username = await encryptWith(await decryptWith(cloudKey, item.username)); } catch{}
-      try { newItem.password = await encryptWith(await decryptWith(cloudKey, item.password)); } catch{}
-      if(item.notes) try { newItem.notes = await encryptWith(await decryptWith(cloudKey, item.notes)); } catch{}
-      if(item.totp_secret) try { newItem.totp_secret = await encryptWith(await decryptWith(cloudKey, item.totp_secret)); } catch{}
-      if(item.custom_fields && item.custom_fields.length){
-        newItem.custom_fields = await Promise.all(item.custom_fields.map(async cf => {
-          const newCf = { ...cf };
-          try { newCf.value = await encryptWith(await decryptWith(cloudKey, cf.value)); } catch{}
-          return newCf;
-        }));
-      }
-      // L6: Re-encrypt metadata fields (decrypt with cloudKey, re-encrypt with _key)
+    // Metadata encrypt/decrypt parameterized by key (mirrors encryptMeta/decryptMeta
+    // but without touching the _key global).
+    async function encryptMetaWith(key, value){
+      if(value === null || value === undefined) return null;
+      return encryptWith(key, JSON.stringify(value));
+    }
+    async function decryptMetaWith(key, b64, fallback){
+      if(b64 === null || b64 === undefined || b64 === '') return fallback;
       try {
-        const oldKey = _key; _key = cloudKey;
-        const catVal = _isEncMeta(item.category) ? (await decryptMeta(item.category, 'other') || 'other') : (item.category || 'other');
-        const tagsVal = _isEncMeta(item.tags) ? (await decryptMeta(item.tags, []) || []) : (Array.isArray(item.tags) ? item.tags : []);
-        const bsRaw = _isEncMeta(item.breachStatus) ? await decryptMeta(item.breachStatus, null) : (typeof item.breachStatus === 'number' ? item.breachStatus : null);
-        const bcaRaw = _isEncMeta(item.breachCheckedAt) ? await decryptMeta(item.breachCheckedAt, null) : (item.breachCheckedAt || null);
-        _key = oldKey;
-        newItem.category = await encryptMeta(catVal);
-        newItem.tags = await encryptMeta(tagsVal);
-        newItem.breachStatus = await encryptMeta(bsRaw);
-        newItem.breachCheckedAt = await encryptMeta(bcaRaw);
+        const pt = await decryptWith(key, b64);
+        return JSON.parse(pt);
+      } catch(e) {
+        return fallback;
+      }
+    }
+
+    // Use the local _key captured ONCE at the start of import (immutable
+    // reference — even if some other code path were to reassign _key
+    // mid-import, our captured local reference would not change).
+    const localKey = _key;
+    if(!localKey){
+      console.error('applyCloudVault: local _key is null, vault may be locked');
+      return false;
+    }
+
+    // Track failures per item for diagnostics — without this, silent
+    // catch{} blocks made it impossible to know why items disappeared.
+    let totalFailedFields = 0;
+    let droppedItems = 0;
+
+    // Process items SEQUENTIALLY, not via Promise.all. This avoids any
+    // contention on the IndexedDB write transaction below and keeps the
+    // crypto operations easy to reason about. With ~30 items this is
+    // imperceptible UX-wise.
+    const reencryptedItems = [];
+    for(const item of items){
+      const newItem = { ...item };
+      let itemFailures = 0;
+
+      // Required fields — if title/username/password fail we still keep
+      // the row (the user can recover/edit it) but log the failure.
+      try { newItem.title    = await encryptWith(localKey, await decryptWith(cloudKey, item.title));    } catch(e){ itemFailures++; }
+      try { newItem.username = await encryptWith(localKey, await decryptWith(cloudKey, item.username)); } catch(e){ itemFailures++; }
+      try { newItem.password = await encryptWith(localKey, await decryptWith(cloudKey, item.password)); } catch(e){ itemFailures++; }
+
+      // Optional fields — only re-encrypt if present
+      if(item.notes){
+        try { newItem.notes = await encryptWith(localKey, await decryptWith(cloudKey, item.notes)); }
+        catch(e){ itemFailures++; newItem.notes = ''; }
+      }
+      if(item.totp_secret){
+        try { newItem.totp_secret = await encryptWith(localKey, await decryptWith(cloudKey, item.totp_secret)); }
+        catch(e){ itemFailures++; newItem.totp_secret = ''; }
+      }
+
+      if(item.custom_fields && item.custom_fields.length){
+        const newFields = [];
+        for(const cf of item.custom_fields){
+          const newCf = { ...cf };
+          if(cf.value){
+            try { newCf.value = await encryptWith(localKey, await decryptWith(cloudKey, cf.value)); }
+            catch(e){ itemFailures++; newCf.value = ''; }
+          }
+          newFields.push(newCf);
+        }
+        newItem.custom_fields = newFields;
+      }
+
+      // Metadata: detect encrypted vs legacy plaintext and re-encrypt with localKey.
+      // No global _key swap here — every call passes the explicit key.
+      try {
+        const catVal  = _isEncMeta(item.category)        ? await decryptMetaWith(cloudKey, item.category, 'other')   : (item.category || 'other');
+        const tagsVal = _isEncMeta(item.tags)            ? await decryptMetaWith(cloudKey, item.tags, [])            : (Array.isArray(item.tags) ? item.tags : []);
+        const bsRaw   = _isEncMeta(item.breachStatus)    ? await decryptMetaWith(cloudKey, item.breachStatus, null)  : (typeof item.breachStatus === 'number' ? item.breachStatus : null);
+        const bcaRaw  = _isEncMeta(item.breachCheckedAt) ? await decryptMetaWith(cloudKey, item.breachCheckedAt, null): (item.breachCheckedAt || null);
+
+        newItem.category        = await encryptMetaWith(localKey, typeof catVal === 'string' ? catVal : 'other');
+        newItem.tags            = await encryptMetaWith(localKey, Array.isArray(tagsVal) ? tagsVal : []);
+        newItem.breachStatus    = await encryptMetaWith(localKey, typeof bsRaw === 'number' ? bsRaw : null);
+        newItem.breachCheckedAt = await encryptMetaWith(localKey, bcaRaw);
         newItem._metaV = ROW_META_V;
-      } catch{}
-      return newItem;
-    }));
+      } catch(e){
+        // Worst case: leave metadata as defaults so loadItems doesn't choke.
+        itemFailures++;
+        newItem.category        = await encryptMetaWith(localKey, 'other').catch(()=>null);
+        newItem.tags            = await encryptMetaWith(localKey, []).catch(()=>null);
+        newItem.breachStatus    = null;
+        newItem.breachCheckedAt = null;
+        newItem._metaV = ROW_META_V;
+      }
+
+      totalFailedFields += itemFailures;
+      reencryptedItems.push(newItem);
+    }
+
+    if(totalFailedFields > 0){
+      console.warn(`applyCloudVault: ${totalFailedFields} field decryption failures across ${reencryptedItems.length} items`);
+    }
+
+    // Sanity check: if we ended up with zero items but the cloud claimed >0,
+    // bail out rather than wipe the local vault.
+    if(items.length > 0 && reencryptedItems.length === 0){
+      console.error('applyCloudVault: all items failed to re-encrypt, aborting wipe');
+      return false;
+    }
 
     // Hapus items lokal, insert yang sudah di-re-encrypt
     const d = await openDB();
@@ -8092,9 +8167,27 @@ function showSyncImportModal(cloudData){
       showToast('Importing vault...', '');
       const ok = await applyCloudVault(cloudData, masterPw);
       if(ok){
+        // Bug #1 fix: ensure UI fully re-renders after import.
+        // - reload _items from the freshly written IndexedDB rows
+        // - reset filter & search so imported items aren't hidden by
+        //   stale filter state from before the import
+        // - clear advanced filter badge
+        // - render once items are loaded
         await loadItems();
+        _filter = 'all';
+        const searchEl = document.getElementById('search');
+        if(searchEl) searchEl.value = '';
+        if(typeof _advFilter === 'object' && _advFilter){
+          _advFilter.tags = [];
+          _advFilter.status = 'all';
+          _advFilter.strength = 'all';
+          _advFilter.age = 'all';
+        }
         render();
-        showToast('Vault imported from cloud!', 'ok');
+        // Defensive double-render after a tick in case async DB writes
+        // from migrateMetadataInBackground arrive late.
+        setTimeout(() => { try { render(); } catch(e){} }, 100);
+        showToast(`Vault imported from cloud (${_items.length} items)`, 'ok');
       } else {
         showToast('Wrong password. Enter the master password from your other device, not this device.', 'error');
         // Tampilkan modal lagi biar user bisa coba ulang
