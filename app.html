@@ -7019,10 +7019,7 @@ function renderLicenseSheet(){
       <button class="btn-deactivate" style="width:100%;padding:11px;justify-content:center;display:flex" onclick="deactivateLicense()">
         ${t('premium.deactivateBtn')}
       </button>
-      <button onclick="forceSyncUpload()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--sub);cursor:pointer;font-family:var(--sans);font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        Force Upload Vault
-      </button>`;
+`;
     loadDeviceList();
   } else {
     title.textContent = t('premium.enterKey');
@@ -7057,13 +7054,6 @@ function renderLicenseSheet(){
       <div id="licenseMsg" style="font-size:12px;min-height:14px;margin-bottom:8px;color:var(--danger)"></div>
       <button class="btn-save" id="licenseActivateBtn" onclick="doActivateLicense()" style="width:100%">${t('premium.activateBtn')}</button>`;
   }
-}
-
-async function forceSyncUpload(){
-  showToast('Uploading vault...', '');
-  const result = await uploadVault();
-  if(result && result.success) showToast('Vault uploaded!', 'ok');
-  else showToast('Upload failed', 'error');
 }
 
 async function loadDeviceList(){
@@ -7359,7 +7349,7 @@ function setSyncSpinning(on){
 async function encryptVaultForSync(){
   const raw = await dbAll();
   const salt = localStorage.getItem('vault_salt') || '';
-  const payload = JSON.stringify({ v: 2, salt, items: raw, ts: Date.now() });
+  const payload = JSON.stringify({ v: 2, salt, itemCount: raw.length, items: raw, ts: Date.now() });
   return payload;
 }
 
@@ -7370,11 +7360,27 @@ async function decryptVaultFromSync(payload){
   }catch(e){ return null; }
 }
 
-async function uploadVault(){
+async function uploadVault(force=false){
   if(!isPremium()) return { success: false };
   const license = localStorage.getItem('vault_license');
   const deviceId = getDeviceId();
   if(!license || !deviceId) return { success: false };
+
+  // Cek cloud item count sebelum upload
+  if(!force){
+    try{
+      const cloudData = await downloadVault();
+      if(cloudData){
+        const cloudObj = JSON.parse(cloudData.encryptedVault);
+        const cloudCount = cloudObj.itemCount || (cloudObj.items ? cloudObj.items.length : 0);
+        const localCount = _items.length;
+        if(cloudCount > localCount){
+          // Cloud punya lebih banyak item — tanya user dulu
+          return { success: false, needConfirm: true, cloudCount, localCount, cloudData };
+        }
+      }
+    }catch(e){}
+  }
 
   const encryptedVault = await encryptVaultForSync();
   const localUpdatedAt = new Date().toISOString();
@@ -7503,7 +7509,20 @@ async function manualSync(){
       } else {
         // Lokal lebih baru dan tidak kosong — upload
         const result = await uploadVault();
-        if(result.success) showToast('Vault uploaded to cloud', 'ok');
+        if(result.needConfirm){
+          showConfirm({
+            icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+            title: 'Overwrite Cloud?',
+            desc: `Cloud has ${result.cloudCount} items, you have ${result.localCount}. Upload anyway? This will overwrite cloud data.`,
+            okText: 'Yes, Upload',
+            cancelText: 'Cancel',
+            onOk: async () => {
+              const r = await uploadVault(true);
+              if(r.success) showToast('Vault uploaded to cloud', 'ok');
+              else showToast('Upload failed', 'error');
+            }
+          });
+        } else if(result.success) showToast('Vault uploaded to cloud', 'ok');
         else showToast('Upload failed', 'error');
       }
     } else {
@@ -7530,7 +7549,13 @@ async function autoUpload(){
   // Debounce 3 detik
   clearTimeout(autoUpload._timer);
   autoUpload._timer = setTimeout(async () => {
-    if(_items.length > 0) await uploadVault();
+    if(_items.length === 0) return;
+    const result = await uploadVault();
+    // Kalau cloud punya lebih banyak item, jangan auto-overwrite
+    // User harus manual sync
+    if(result && result.needConfirm){
+      showToast('Cloud has more items. Open Sync Vault to review.', 'warn');
+    }
   }, 3000);
 }
 
@@ -7570,11 +7595,12 @@ async function syncOnUnlock(){
     const cloudNewer = !localTs || new Date(cloudData.updatedAt) > new Date(localTs);
     const localEmpty = _items.length === 0;
 
-    if(cloudNewer){
-      showSyncImportModal(cloudData);
-    } else if(localEmpty){
-      // Vault kosong tapi cloud ada data — tampilkan banner
+    if(localEmpty){
+      // Vault lokal kosong — selalu tampilkan banner, jangan modal paksa
       showCloudBanner(cloudData);
+    } else if(cloudNewer){
+      // Cloud lebih baru dan lokal ada data — tampilkan modal import
+      showSyncImportModal(cloudData);
     }
   }catch(e){}
 }
@@ -7609,10 +7635,12 @@ function showCloudBanner(cloudData){
   `;
   window._pendingCloudData = cloudData;
 
-  // Insert sebelum filter bar
+  // Insert sebelum search-wrap (visible di mobile dan desktop)
+  const searchWrap = document.querySelector('.search-wrap:not(.main-search-wrap)') || document.querySelector('.search-wrap');
   const filterBar = document.querySelector('.filter-bar');
-  if(filterBar) filterBar.insertAdjacentElement('beforebegin', banner);
-  else document.getElementById('app').prepend(banner);
+  if(filterBar && window.innerWidth < 768) filterBar.insertAdjacentElement('beforebegin', banner);
+  else if(searchWrap) searchWrap.insertAdjacentElement('beforebegin', banner);
+  else document.getElementById('app').insertAdjacentElement('afterbegin', banner);
 }
 
 function showSyncImportModal(cloudData){
