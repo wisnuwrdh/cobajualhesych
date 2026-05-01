@@ -3,11 +3,9 @@
 
 // BUMP versi ini setiap kali deploy agar cache lama otomatis dihapus
 // Format: 'hesych-v{major}.{minor}' — contoh: v1.1, v1.2, v2.0
-const CACHE_NAME = 'hesych-v1.2';
+const CACHE_NAME = 'hesych-v1.3';
 
 const ASSETS = [
-  '/',
-  '/index.html',
   '/app.html',
   '/upgrade.html',
   '/share.html',
