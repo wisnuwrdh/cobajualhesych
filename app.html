@@ -4889,7 +4889,19 @@ function showResetConfirm(){
     desc: 'This will delete ALL data and your master password. This cannot be undone.',
     okText: 'Yes, Reset',
     cancelText: 'Cancel',
-    onOk: () => {
+    onOk: async () => {
+      // Hapus device dari Supabase dulu sebelum reset
+      const license = localStorage.getItem('vault_license');
+      const deviceId = localStorage.getItem('hesych_device_id');
+      if(license && deviceId){
+        try{
+          await fetch('/api/verify-license', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ license, deviceId, action: 'remove' })
+          });
+        }catch(e){}
+      }
       localStorage.removeItem('vault_salt');
       localStorage.removeItem('vault_ver');
       localStorage.removeItem('vault_bio_cred_id');
