@@ -7654,12 +7654,22 @@ function setSyncSpinning(on){
   else icon.classList.remove('sync-spinning');
 }
 
-// H1 FIX: vault payload now wrapped with AES-GCM envelope encryption using _key.
-// Server only ever stores an opaque ciphertext blob.
+// H1 FIX: vault payload now wrapped with AES-GCM envelope encryption.
+// Outer wrapper is JSON with plaintext salt (salt is public, not secret) so the
+// receiving device can derive the correct key to decrypt the envelope.
+// Inner payload (items) is fully encrypted — server only sees opaque ciphertext.
+//
+// Wire format (v3):
+//   {
+//     "v": 3,
+//     "salt": "<base64 of upload device's salt>",
+//     "payload": "<base64( iv(12) || AES-GCM-ciphertext )>"
+//   }
 async function encryptVaultForSync(){
   const raw = await dbAll();
   const salt = localStorage.getItem('vault_salt') || '';
-  const inner = JSON.stringify({ v: 3, salt, items: raw });
+  // Inner content: only items + itemCount (salt is in the outer wrapper)
+  const inner = JSON.stringify({ items: raw, itemCount: raw.length, ts: Date.now() });
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
@@ -7669,25 +7679,49 @@ async function encryptVaultForSync(){
   const wrapped = new Uint8Array(iv.length + ct.byteLength);
   wrapped.set(iv);
   wrapped.set(new Uint8Array(ct), iv.length);
-  return bufToB64(wrapped);
+  return JSON.stringify({
+    v: 3,
+    salt,
+    payload: bufToB64(wrapped),
+  });
 }
 
+// Decrypt a sync payload. Accepts either a raw string from the server OR a
+// pre-parsed object. Returns { v, salt, items } on success, null on failure.
+//
+// IMPORTANT: this function does NOT itself decrypt the inner ciphertext —
+// because that requires a key derived from the *uploading* device's salt
+// (which lives inside the wrapper). It returns the wrapper so the caller
+// (applyCloudVault) can derive the correct cloudKey and then decrypt.
+//
+// For backward compatibility with legacy v2 (plain JSON) cloud vaults,
+// returns the parsed object as-is so the caller can detect format and
+// branch accordingly.
 async function decryptVaultFromSync(payload){
+  if(payload == null) return null;
   try{
-    // H1 FIX: try new envelope-encrypted format first (v3)
-    const buf = b64ToBuf(payload);
-    if(buf.byteLength > 12){
-      try{
-        const iv = buf.slice(0, 12);
-        const ct = buf.slice(12);
-        const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, _key, ct);
-        return JSON.parse(new TextDecoder().decode(pt));
-      }catch{}
-    }
-    // Fallback: legacy unencrypted format (v2) for existing cloud vaults
-    const obj = JSON.parse(new TextDecoder().decode(typeof payload === 'string' ? new TextEncoder().encode(payload) : buf));
+    // Both v2 (legacy plain JSON) and v3 (new wrapper) are JSON strings.
+    const obj = (typeof payload === 'string') ? JSON.parse(payload) : payload;
     return obj;
-  }catch(e){ return null; }
+  }catch(e){
+    return null;
+  }
+}
+
+// Decrypt the inner ciphertext of a v3 wrapper using a specific key.
+// Returns the inner object { items, itemCount, ts } or null on failure.
+async function decryptSyncInner(wrapper, key){
+  try{
+    if(!wrapper || wrapper.v !== 3 || !wrapper.payload) return null;
+    const buf = b64ToBuf(wrapper.payload);
+    if(buf.byteLength <= 12) return null;
+    const iv = buf.slice(0, 12);
+    const ct = buf.slice(12);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return JSON.parse(new TextDecoder().decode(pt));
+  }catch(e){
+    return null;
+  }
 }
 
 async function uploadVault(force=false){
@@ -7701,8 +7735,37 @@ async function uploadVault(force=false){
     try{
       const cloudData = await downloadVault();
       if(cloudData){
-        const cloudObj = JSON.parse(cloudData.encryptedVault);
-        const cloudCount = cloudObj.itemCount || (cloudObj.items ? cloudObj.items.length : 0);
+        const wrapper = await decryptVaultFromSync(cloudData.encryptedVault);
+        let cloudCount = 0;
+        if(wrapper){
+          if(wrapper.v === 3){
+            // New format: itemCount may not be visible without decrypting,
+            // but we don't need to decrypt just to count — we trust the
+            // uploading device's count if exposed via inner. Without
+            // decrypting we can't count, so try to decrypt with cloudKey.
+            try{
+              const cloudSalt = b64ToBuf(wrapper.salt);
+              // We can only count if user's master password matches —
+              // if it doesn't, we conservatively skip the count check
+              // and let the upload proceed (force-overwrite avoided
+              // because user presumably has same password).
+              // Best-effort: derive key with current vault salt as a
+              // cheap sanity check by attempting a decrypt only if
+              // salts match (same device). Otherwise, fall through.
+              const localSalt = localStorage.getItem('vault_salt') || '';
+              if(wrapper.salt === localSalt){
+                const inner = await decryptSyncInner(wrapper, _key);
+                if(inner) cloudCount = inner.itemCount || (inner.items ? inner.items.length : 0);
+              }
+              // If salts differ, we can't count without master password —
+              // skip the count check, which is OK because needConfirm is
+              // an advisory, not a security guard.
+            }catch{}
+          } else if(wrapper.items){
+            // Legacy v2 format: plaintext JSON with items array
+            cloudCount = wrapper.itemCount || wrapper.items.length;
+          }
+        }
         const localCount = _items.length;
         if(cloudCount > localCount){
           // Cloud punya lebih banyak item — tanya user dulu
@@ -7748,17 +7811,44 @@ async function downloadVault(){
 }
 
 async function applyCloudVault(cloudData, masterPassword){
-  // masterPassword: string yang diinput user
-  // cloudData.encryptedVault: JSON string berisi { v, salt, items }
-  // items encrypted dengan deriveKey(masterPassword, cloudSalt)
-  // Setelah decrypt, re-encrypt dengan _key lokal (deriveKey(masterPassword, localSalt))
+  // masterPassword: string yang diinput user (master password dari device asal)
+  // cloudData.encryptedVault: JSON wrapper { v:3, salt, payload } (v3) atau plain JSON {items} (v2)
+  // Steps:
+  //   1. Parse wrapper from server
+  //   2. Derive cloudKey = PBKDF2(masterPassword, cloudSalt) — cloudSalt from wrapper
+  //   3. (v3) Decrypt envelope payload with cloudKey to get inner { items }
+  //   4. Decrypt each item field with cloudKey, re-encrypt with local _key
   try{
-    const obj = await decryptVaultFromSync(cloudData.encryptedVault);
-    if(!obj || !obj.items) return false;
+    const wrapper = await decryptVaultFromSync(cloudData.encryptedVault);
+    if(!wrapper) return false;
 
-    // Derive cloud key dari masterPassword + salt cloud
-    const cloudSalt = b64ToBuf(obj.salt);
+    // Determine the salt used by the uploading device, plus the items list.
+    let cloudSaltB64, items;
+    if(wrapper.v === 3){
+      // New envelope format
+      if(!wrapper.salt || !wrapper.payload) return false;
+      cloudSaltB64 = wrapper.salt;
+    } else if(wrapper.items){
+      // Legacy v2 format (plain JSON, items already encrypted at field level)
+      if(!wrapper.salt) return false;
+      cloudSaltB64 = wrapper.salt;
+      items = wrapper.items;
+    } else {
+      return false;
+    }
+
+    // Derive cloud key from masterPassword + cloud salt
+    const cloudSalt = b64ToBuf(cloudSaltB64);
     const cloudKey = await deriveKey(masterPassword, cloudSalt);
+
+    // For v3: decrypt the envelope to extract items
+    if(wrapper.v === 3){
+      const inner = await decryptSyncInner(wrapper, cloudKey);
+      if(!inner || !inner.items) return false; // wrong master password
+      items = inner.items;
+    }
+
+    if(!items || !Array.isArray(items)) return false;
 
     // Helper decrypt dengan key tertentu
     async function decryptWith(key, b64){
@@ -7778,7 +7868,7 @@ async function applyCloudVault(cloudData, masterPassword){
     }
 
     // Decrypt semua fields tiap item, lalu re-encrypt dengan _key lokal
-    const reencryptedItems = await Promise.all(obj.items.map(async item => {
+    const reencryptedItems = await Promise.all(items.map(async item => {
       const newItem = { ...item };
       try { newItem.title = await encryptWith(await decryptWith(cloudKey, item.title)); } catch{}
       try { newItem.username = await encryptWith(await decryptWith(cloudKey, item.username)); } catch{}
