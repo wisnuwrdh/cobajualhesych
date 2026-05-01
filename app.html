@@ -6958,9 +6958,14 @@ function renderLicenseSheet(){
         </div>
       </div>
       <p style="font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:16px">${t('premium.activeDesc')}</p>
+      <div id="deviceListSection" style="margin-bottom:16px">
+        <div style="font-size:11px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Active Devices</div>
+        <div id="deviceListItems" style="font-size:13px;color:var(--sub)">Loading...</div>
+      </div>
       <button class="btn-deactivate" style="width:100%;padding:11px;justify-content:center;display:flex" onclick="deactivateLicense()">
         ${t('premium.deactivateBtn')}
       </button>`;
+    loadDeviceList();
   } else {
     title.textContent = t('premium.enterKey');
     body.innerHTML = `
@@ -6993,6 +6998,44 @@ function renderLicenseSheet(){
       </div>
       <div id="licenseMsg" style="font-size:12px;min-height:14px;margin-bottom:8px;color:var(--danger)"></div>
       <button class="btn-save" id="licenseActivateBtn" onclick="doActivateLicense()" style="width:100%">${t('premium.activateBtn')}</button>`;
+  }
+}
+
+async function loadDeviceList(){
+  const container = document.getElementById('deviceListItems');
+  if(!container) return;
+  const key = localStorage.getItem(_LICENSE_KEY);
+  const myDeviceId = getDeviceId();
+  if(!key){ container.textContent = 'No license found.'; return; }
+  try{
+    const res = await fetch('/api/verify-license', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license: key, deviceId: myDeviceId, action: 'list' })
+    });
+    const data = await res.json();
+    const devices = data.devices || [];
+    if(!devices.length){ container.textContent = 'No devices registered.'; return; }
+    container.innerHTML = devices.map(d => {
+      const isMe = d.device_id === myDeviceId;
+      const name = d.device_name || 'Unknown Device';
+      const date = d.activated_at ? new Date(d.activated_at).toLocaleDateString() : '';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card)">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${name}${isMe ? ' <span style="font-size:10px;color:var(--accent);font-family:var(--mono)">THIS DEVICE</span>' : ''}</div>
+          <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:2px">${date}</div>
+        </div>
+        ${isMe ? `<button onclick="deactivateLicense()" style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--danger);cursor:pointer;font-family:var(--sans)">Remove</button>` : ''}
+      </div>`;
+    }).join('');
+    const max = 3;
+    const countEl = document.querySelector('#deviceListSection .device-count');
+    if(!countEl){
+      const label = document.querySelector('#deviceListSection div');
+      if(label) label.textContent = `Active Devices (${devices.length}/${max})`;
+    }
+  }catch(e){
+    container.textContent = 'Could not load devices.';
   }
 }
 
