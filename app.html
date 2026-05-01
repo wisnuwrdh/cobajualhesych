@@ -2714,6 +2714,9 @@ svg{display:block;flex-shrink:0}
   <div class="confirm-modal-icon" id="confirmModalIcon"></div>
   <div class="confirm-modal-title" id="confirmModalTitle"></div>
   <div class="confirm-modal-desc" id="confirmModalDesc"></div>
+  <div id="confirmModalInputWrap" style="display:none;margin-bottom:12px">
+    <input id="confirmModalInput" style="width:100%;padding:10px 13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:var(--mono);outline:none;letter-spacing:.5px" />
+  </div>
   <div class="confirm-modal-actions">
     <button class="confirm-modal-cancel" id="confirmModalCancel"></button>
     <button class="confirm-modal-ok" id="confirmModalOk"></button>
@@ -6449,10 +6452,23 @@ function closeSheetAnim(sheetId, overlayId, callback){
 }
 
 // ── Custom confirm dialog (replaces browser confirm()) ────────────────────
-function showConfirm({ icon='⚠️', title, desc, okText, cancelText, okClass='', onOk }){
+function showConfirm({ icon='⚠️', title, desc, okText, cancelText, okClass='', onOk, showInput=false, inputPlaceholder='', inputType='text' }){
   document.getElementById('confirmModalIcon').innerHTML = icon;
   document.getElementById('confirmModalTitle').textContent = title;
   document.getElementById('confirmModalDesc').textContent = desc;
+  // Input field
+  const inputWrap = document.getElementById('confirmModalInputWrap');
+  const inputEl = document.getElementById('confirmModalInput');
+  if(showInput){
+    inputWrap.style.display = 'block';
+    inputEl.placeholder = inputPlaceholder || '';
+    inputEl.type = inputType || 'text';
+    inputEl.value = '';
+    setTimeout(()=>inputEl.focus(), 100);
+  } else {
+    inputWrap.style.display = 'none';
+    inputEl.value = '';
+  }
   const okBtn = document.getElementById('confirmModalOk');
   const cancelBtn = document.getElementById('confirmModalCancel');
   okBtn.textContent = okText || 'OK';
@@ -6468,7 +6484,11 @@ function showConfirm({ icon='⚠️', title, desc, okText, cancelText, okClass='
     okBtn.replaceWith(okBtn.cloneNode(true));
     cancelBtn.replaceWith(cancelBtn.cloneNode(true));
   };
-  document.getElementById('confirmModalOk').addEventListener('click', () => { close(); onOk(); });
+  document.getElementById('confirmModalOk').addEventListener('click', () => { 
+    const val = document.getElementById('confirmModalInput').value;
+    close(); 
+    onOk(showInput ? val : undefined); 
+  });
   document.getElementById('confirmModalCancel').addEventListener('click', close);
   document.getElementById('confirmModalOverlay').addEventListener('click', close, { once: true });
 }
@@ -7324,11 +7344,9 @@ function setSyncSpinning(on){
 }
 
 async function encryptVaultForSync(){
-  // Ambil semua raw items dari IndexedDB (masih encrypted)
   const raw = await dbAll();
   const salt = localStorage.getItem('vault_salt') || '';
-  const ver = localStorage.getItem('vault_ver') || '';
-  const payload = JSON.stringify({ v: 1, salt, ver, items: raw, ts: Date.now() });
+  const payload = JSON.stringify({ v: 2, salt, items: raw, ts: Date.now() });
   return payload;
 }
 
@@ -7380,35 +7398,69 @@ async function downloadVault(){
   }catch(e){ return null; }
 }
 
-async function applyCloudVault(cloudData){
-  // Restore items dari cloud ke IndexedDB
+async function applyCloudVault(cloudData, masterPassword){
+  // masterPassword: string yang diinput user
+  // cloudData.encryptedVault: JSON string berisi { v, salt, items }
+  // items encrypted dengan deriveKey(masterPassword, cloudSalt)
+  // Setelah decrypt, re-encrypt dengan _key lokal (deriveKey(masterPassword, localSalt))
   try{
     const obj = await decryptVaultFromSync(cloudData.encryptedVault);
     if(!obj || !obj.items) return false;
 
-    // Hapus semua items lokal, replace dengan cloud
+    // Derive cloud key dari masterPassword + salt cloud
+    const cloudSalt = b64ToBuf(obj.salt);
+    const cloudKey = await deriveKey(masterPassword, cloudSalt);
+
+    // Helper decrypt dengan key tertentu
+    async function decryptWith(key, b64){
+      const buf = b64ToBuf(b64);
+      const iv = buf.slice(0,12); const ct = buf.slice(12);
+      const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
+      return new TextDecoder().decode(pt);
+    }
+
+    // Helper encrypt dengan _key lokal
+    async function encryptWith(text){
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, _key, new TextEncoder().encode(text));
+      const buf = new Uint8Array(iv.length + ct.byteLength);
+      buf.set(iv, 0); buf.set(new Uint8Array(ct), iv.length);
+      return bufToB64(buf);
+    }
+
+    // Decrypt semua fields tiap item, lalu re-encrypt dengan _key lokal
+    const reencryptedItems = await Promise.all(obj.items.map(async item => {
+      const newItem = { ...item };
+      try { newItem.title = await encryptWith(await decryptWith(cloudKey, item.title)); } catch{}
+      try { newItem.username = await encryptWith(await decryptWith(cloudKey, item.username)); } catch{}
+      try { newItem.password = await encryptWith(await decryptWith(cloudKey, item.password)); } catch{}
+      if(item.notes) try { newItem.notes = await encryptWith(await decryptWith(cloudKey, item.notes)); } catch{}
+      if(item.totp_secret) try { newItem.totp_secret = await encryptWith(await decryptWith(cloudKey, item.totp_secret)); } catch{}
+      if(item.custom_fields && item.custom_fields.length){
+        newItem.custom_fields = await Promise.all(item.custom_fields.map(async cf => {
+          const newCf = { ...cf };
+          try { newCf.value = await encryptWith(await decryptWith(cloudKey, cf.value)); } catch{}
+          return newCf;
+        }));
+      }
+      return newItem;
+    }));
+
+    // Hapus items lokal, insert yang sudah di-re-encrypt
     const d = await openDB();
     await new Promise((res, rej) => {
       const tx = d.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).clear();
-      tx.oncomplete = res;
-      tx.onerror = rej;
+      tx.oncomplete = res; tx.onerror = rej;
     });
-
-    // Insert semua items dari cloud
     await new Promise((res, rej) => {
       const tx = d.transaction(STORE, 'readwrite');
       const store = tx.objectStore(STORE);
-      obj.items.forEach(item => store.put(item));
-      tx.oncomplete = res;
-      tx.onerror = rej;
+      reencryptedItems.forEach(item => store.put(item));
+      tx.oncomplete = res; tx.onerror = rej;
     });
 
-    // Restore salt dan ver dari cloud — wajib sama agar decrypt berhasil
-    if(obj.salt) localStorage.setItem('vault_salt', obj.salt);
-    if(obj.ver) localStorage.setItem('vault_ver', obj.ver);
     localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
-
     return true;
   }catch(e){
     console.error('applyCloudVault error:', e);
@@ -7431,14 +7483,9 @@ async function manualSync(){
       const cloudNewer = !localTs || new Date(cloudTs) > new Date(localTs);
 
       if(cloudNewer){
-        // Cloud lebih baru — download dan apply
-        const ok = await applyCloudVault(cloudData);
-        if(ok){
-          showToast('Vault synced! Re-enter your master password to continue.', 'ok');
-          setTimeout(()=>{ lockVault(); }, 1500);
-        } else {
-          showToast('Sync failed', 'error');
-        }
+        // Cloud lebih baru — minta master password dulu
+        showSyncImportModal(cloudData);
+        return;
       } else {
         // Lokal lebih baru — upload
         const result = await uploadVault();
@@ -7472,29 +7519,41 @@ async function autoUpload(){
 // Auto-download saat pertama unlock (kalau premium)
 async function syncOnUnlock(){
   if(!isPremium()) return;
-  // Tampilkan hint di lock screen
-  const lockSub = document.getElementById('lockSub');
-  if(lockSub && !isFirstTime()){
-    const original = lockSub.textContent;
-    lockSub.textContent = 'Enter your master password — use the same password as your other device if syncing';
-    setTimeout(()=>{ if(lockSub) lockSub.textContent = original; }, 5000);
-  }
-  setSyncSpinning(true);
   try{
     const cloudData = await downloadVault();
     if(!cloudData) return;
     const localTs = localStorage.getItem(_SYNC_TS_KEY);
     const cloudNewer = !localTs || new Date(cloudData.updatedAt) > new Date(localTs);
     if(cloudNewer){
-      const ok = await applyCloudVault(cloudData);
-      if(ok){
-        // Salt sudah berubah — lock vault dan minta unlock ulang
-        showToast('Vault synced! Re-enter your master password to continue.', 'ok');
-        setTimeout(()=>{ lockVault(); }, 1500);
-      }
+      // Tampilkan modal minta master password untuk import vault dari cloud
+      showSyncImportModal(cloudData);
     }
   }catch(e){}
-  finally{ setSyncSpinning(false); }
+}
+
+function showSyncImportModal(cloudData){
+  showConfirm({
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+    title: 'Cloud Vault Found',
+    desc: 'A newer vault was found in the cloud. Enter your master password to import it to this device.',
+    okText: 'Import',
+    cancelText: 'Skip',
+    showInput: true,
+    inputPlaceholder: 'Master password',
+    inputType: 'password',
+    onOk: async (masterPw) => {
+      if(!masterPw){ showToast('Master password required', 'error'); return; }
+      showToast('Importing vault...', '');
+      const ok = await applyCloudVault(cloudData, masterPw);
+      if(ok){
+        await loadItems();
+        render();
+        showToast('Vault imported from cloud!', 'ok');
+      } else {
+        showToast('Import failed. Wrong password?', 'error');
+      }
+    }
+  });
 }
 
 // ===== TOAST =====
