@@ -4111,7 +4111,7 @@ function guessDomain(title){
 function getFaviconUrl(title){
   const domain = guessDomain(title);
   if(!domain) return null;
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  return `favicons/${domain}.png`;
 }
 
 function renderCard(item, idx){
@@ -4982,10 +4982,20 @@ async function confirmBackupPw(){
     const ptBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, backupKey, ct);
     const inner = JSON.parse(new TextDecoder().decode(ptBuf));
     if(!inner || !Array.isArray(inner.data)) throw new Error('Backup payload invalid');
-    // Berhasil — tutup modal, lanjut ke flow normal
+    // Berhasil — tutup modal, lanjut ke flow normal.
+    // Forward backupKey via _presetKey: data sudah dipastikan terenkripsi dengan
+    // backupKey ini (kalau export-nya dari doEncExport custom mode), jadi import
+    // bisa pakai langsung tanpa perlu modal kedua. Kalau backup ternyata bundle
+    // lama (data masih terenkripsi master key vault asal), _presetKey akan gagal
+    // decrypt → flow akan fallback ke modal verifikasi seperti biasa.
     document.getElementById('backupPwModal').classList.remove('show');
     _backupPending = null;
-    await processImportJson({ v: inner.v || 3, salt: inner.salt || '', data: inner.data });
+    await processImportJson({
+      v: inner.v || 3,
+      salt: inner.salt || '',
+      data: inner.data,
+      _presetKey: backupKey,
+    });
   }catch(err){
     msgEl.textContent = 'Wrong password or corrupt backup';
     document.getElementById('backupPwInput').style.borderColor = 'var(--danger)';
@@ -5019,8 +5029,30 @@ async function processImportJson(json){
       throw new Error(t('toast.importInvalid',{n:invalidItems.length, rows:sample+more}));
     }
 
+    // ===== PRESET KEY (dari confirmBackupPw, custom-password backup) =====
+    // Kalau confirmBackupPw sudah men-derive backupKey dan data inner sudah
+    // di-re-encrypt dengan key itu (export modern via doEncExport), kita bisa
+    // skip modal verifikasi dan salt check — langsung pakai key yang sudah ada.
+    // Verify dengan trial decrypt item pertama supaya defense-in-depth: kalau
+    // bundle format lama (data masih dienkripsi master key vault asal), trial
+    // decrypt akan throw → fallback ke salt comparison di bawah.
+    let presetVerified = false;
+    if(json._presetKey && json.data.length > 0){
+      try {
+        const buf = b64ToBuf(json.data[0].title);
+        const iv = buf.slice(0,12); const ct = buf.slice(12);
+        await crypto.subtle.decrypt({name:'AES-GCM', iv}, json._presetKey, ct);
+        json._importKey = json._presetKey;
+        json._needReEncrypt = true;
+        presetVerified = true;
+      } catch(e) {
+        // _presetKey tidak cocok — fallback ke salt comparison di bawah
+        json._presetKey = null;
+      }
+    }
+
     // ===== VERIFIKASI KOMPATIBILITAS BACKUP =====
-    if(json.data.length > 0 && json.salt){
+    if(!presetVerified && json.data.length > 0 && json.salt){
       const currentSaltB64 = localStorage.getItem('vault_salt') || '';
       if(json.salt === currentSaltB64){
         json._importKey = null;
@@ -5033,7 +5065,7 @@ async function processImportJson(json){
         document.getElementById('importPwMsg').textContent='';
         return;
       }
-    } else {
+    } else if(!presetVerified) {
       json._importKey = null;
       json._needReEncrypt = false;
     }
@@ -7301,10 +7333,89 @@ async function doEncExport(){
 
     let bundle;
     if(exportPassword){
-      // Custom password: derive new key, encrypt payload
+      // Custom password: derive new key from custom password + backupSalt.
+      // Items in `raw` are still encrypted under the master `_key`, so we must
+      // decrypt every encrypted field and re-encrypt under `backupKey` before
+      // writing the inner payload. The inner payload's `salt` is set to
+      // `backupSalt` (matches the outer bundle salt), so on import the salt
+      // comparison in processImportJson() succeeds and the user is NOT prompted
+      // for the source vault's master password — only the custom password.
       const backupSalt = crypto.getRandomValues(new Uint8Array(16));
+      const backupSaltB64 = btoa(String.fromCharCode(...backupSalt));
       const backupKey = await deriveKey(exportPassword, backupSalt);
-      const payload = JSON.stringify({v:3, salt: vaultSalt, data: raw});
+
+      const reencrypted = [];
+      const masterKey = _key;
+      try {
+        for(const row of raw){
+          // Decrypt all encrypted fields with master key
+          _key = masterKey;
+          const dTitle    = await decrypt(row.title);
+          const dUsername = await decrypt(row.username);
+          const dPassword = await decrypt(row.password);
+          const dNotes    = row.notes ? await decrypt(row.notes) : '';
+          const dTotp     = row.totp_secret ? await decrypt(row.totp_secret) : '';
+
+          // custom_fields: decrypt each value (may be empty string)
+          const dCustomFields = [];
+          if(Array.isArray(row.custom_fields)){
+            for(const f of row.custom_fields){
+              dCustomFields.push({
+                name: f.name,
+                type: f.type || 'text',
+                value: f.value ? await decrypt(f.value) : '',
+              });
+            }
+          }
+
+          // Encrypted metadata: only decrypt if it actually looks encrypted
+          // (legacy plaintext rows pre-v6 may still exist in older vaults).
+          let dCategory, dTags, dBreachStatus, dBreachCheckedAt;
+          let catWasEnc = false, tagsWasEnc = false, bsWasEnc = false, bcaWasEnc = false;
+          if(_isEncMeta(row.category)){ dCategory = await decryptMeta(row.category, 'other'); catWasEnc = true; }
+          else { dCategory = (row.category != null ? row.category : 'other'); }
+          if(_isEncMeta(row.tags)){ dTags = await decryptMeta(row.tags, []); tagsWasEnc = true; }
+          else { dTags = Array.isArray(row.tags) ? row.tags : []; }
+          if(typeof row.breachStatus === 'string' && _isEncMeta(row.breachStatus)){ dBreachStatus = await decryptMeta(row.breachStatus, null); bsWasEnc = true; }
+          else { dBreachStatus = (typeof row.breachStatus === 'number' ? row.breachStatus : null); }
+          if(typeof row.breachCheckedAt === 'string' && _isEncMeta(row.breachCheckedAt)){ dBreachCheckedAt = await decryptMeta(row.breachCheckedAt, null); bcaWasEnc = true; }
+          else { dBreachCheckedAt = (row.breachCheckedAt != null ? row.breachCheckedAt : null); }
+
+          // Re-encrypt all encrypted fields with backup key
+          _key = backupKey;
+          const newCustomFields = [];
+          for(const f of dCustomFields){
+            newCustomFields.push({
+              name: f.name,
+              type: f.type,
+              value: f.value ? await encrypt(f.value) : '',
+            });
+          }
+          const newRow = {
+            ...row,
+            title:    await encrypt(dTitle),
+            username: await encrypt(dUsername),
+            password: await encrypt(dPassword),
+            notes:    dNotes ? await encrypt(dNotes) : '',
+            totp_secret: dTotp ? await encrypt(dTotp) : '',
+            custom_fields: newCustomFields,
+            // Preserve format: re-encrypt fields that were encrypted; leave
+            // legacy plaintext fields as-is so import handles them via lazy migration.
+            category:        catWasEnc  ? await encryptMeta(dCategory)        : dCategory,
+            tags:            tagsWasEnc ? await encryptMeta(dTags)            : dTags,
+            breachStatus:    bsWasEnc   ? await encryptMeta(dBreachStatus)    : dBreachStatus,
+            breachCheckedAt: bcaWasEnc  ? await encryptMeta(dBreachCheckedAt) : dBreachCheckedAt,
+          };
+          reencrypted.push(newRow);
+        }
+      } finally {
+        // Always restore master key, even if a decrypt/encrypt step throws
+        _key = masterKey;
+      }
+
+      // Inner salt = backupSalt so processImportJson sees a salt match after
+      // the outer custom-password layer is decrypted.
+      const payload = JSON.stringify({v:3, salt: backupSaltB64, data: reencrypted});
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const enc = await crypto.subtle.encrypt(
         {name:'AES-GCM', iv}, backupKey, new TextEncoder().encode(payload)
@@ -7313,7 +7424,7 @@ async function doEncExport(){
         type: 'vault-encrypted-backup',
         pwMode: 'custom',
         v: 1,
-        salt: btoa(String.fromCharCode(...backupSalt)),
+        salt: backupSaltB64,
         iv: btoa(String.fromCharCode(...iv)),
         data: btoa(String.fromCharCode(...new Uint8Array(enc))),
       };
