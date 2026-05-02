@@ -38,14 +38,14 @@ function getSupabase() {
 async function getVault(licenseKey) {
   const { url, headers } = getSupabase();
   const res = await fetch(
-    `${url}/rest/v1/vault_sync?license_key=eq.${encodeURIComponent(licenseKey)}&select=encrypted_vault,updated_at`,
+    `${url}/rest/v1/vault_sync?license_key=eq.${encodeURIComponent(licenseKey)}&select=encrypted_vault,updated_at,last_device_id`,
     { headers }
   );
   const data = await res.json();
   return data[0] || null;
 }
 
-async function upsertVault(licenseKey, encryptedVault) {
+async function upsertVault(licenseKey, encryptedVault, deviceId) {
   const { url, headers } = getSupabase();
   await fetch(`${url}/rest/v1/vault_sync`, {
     method: 'POST',
@@ -54,6 +54,7 @@ async function upsertVault(licenseKey, encryptedVault) {
       license_key: licenseKey,
       encrypted_vault: encryptedVault,
       updated_at: new Date().toISOString(),
+      last_device_id: deviceId, // OpsiB: track which device uploaded last
     }),
   });
 }
@@ -111,6 +112,7 @@ export default async function handler(req, res) {
       found: true,
       encryptedVault: vault.encrypted_vault,
       updatedAt: vault.updated_at,
+      lastDeviceId: vault.last_device_id || null, // OpsiB: client uses this to skip modal if same device
     });
   }
 
@@ -136,7 +138,7 @@ export default async function handler(req, res) {
       }
     }
 
-    await upsertVault(key, encryptedVault);
+    await upsertVault(key, encryptedVault, deviceId);
     return res.status(200).json({ success: true });
   }
 
