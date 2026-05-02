@@ -5,22 +5,19 @@
 //   GUMROAD_PRODUCT_ID        — Product ID dari Gumroad dashboard
 //   SUPABASE_URL              — Supabase project URL
 //   SUPABASE_SERVICE_ROLE_KEY — Supabase service role key
+//   UPSTASH_REDIS_REST_URL    — Upstash Redis REST URL
+//   UPSTASH_REDIS_REST_TOKEN  — Upstash Redis REST token
 
-// Simple in-memory rate limiter — max 20 req/IP/15 menit
-const _rateMap = new Map();
-function isRateLimited(ip) {
-  const now = Date.now();
-  const window = 15 * 60 * 1000;
-  const max = 20;
-  const entry = _rateMap.get(ip) || { count: 0, start: now };
-  if (now - entry.start > window) {
-    _rateMap.set(ip, { count: 1, start: now });
-    return false;
-  }
-  entry.count++;
-  _rateMap.set(ip, entry);
-  return entry.count > max;
-}
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// Upstash Redis rate limiter — persistent across all Vercel instances
+// max 20 requests per IP per 15 minutes (sliding window)
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(20, '15 m'),
+  prefix: 'rl:sync',
+});
 
 // ── Supabase helper ───────────────────────────────────────────────────────
 function getSupabase() {
@@ -83,8 +80,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limiting via Upstash Redis (persistent across all serverless instances)
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-  if (isRateLimited(ip)) {
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
     return res.status(429).json({ error: 'Too many requests. Try again later.' });
   }
 
