@@ -2589,6 +2589,35 @@ svg{display:block;flex-shrink:0}
   </div>
 </div>
 
+<!-- BACKUP PASSWORD MODAL (for encrypted backup with custom password) -->
+<div class="modal-overlay" id="backupPwModal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Encrypted Backup</span>
+    </div>
+    <div class="modal-desc">
+      This backup file is encrypted with a custom password. Enter the password used to create this backup.
+    </div>
+    <div style="position:relative;margin-bottom:10px">
+      <input type="password" id="backupPwInput" placeholder="Backup password" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off"
+        style="width:100%;padding:11px 44px 11px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:var(--mono);outline:none;letter-spacing:1px;"
+        oninput="document.getElementById('backupPwInput').style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')confirmBackupPw()"/>
+      <button onclick="toggleEye('backupPwInput',this)" type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--dim);padding:4px;display:flex;align-items:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <div id="backupPwMsg" style="font-size:11px;min-height:14px;margin-bottom:10px;font-family:var(--mono);color:var(--danger);"></div>
+    <div class="modal-actions">
+      <button class="btn-merge" onclick="confirmBackupPw()" style="justify-content:center">
+        Decrypt &amp; Continue
+      </button>
+      <button class="btn-modal-cancel" onclick="cancelBackupPw()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT PASSWORD MODAL (for backup from different vault) -->
 <div class="modal-overlay" id="importPwModal">
   <div class="modal-box">
@@ -3181,6 +3210,7 @@ let _revealed = new Set(); // item ids with password shown
 let _filter = 'all';
 let _importPending = null; // {data, file}
 let _importSessionKey = null; // key disimpan sebelum file picker dibuka
+let _backupPending = null; // bundle encrypted backup yang menunggu password
 let _idleTimer = null;
 // ===== LOCK SECRET STATE =====
 // Map: itemId → { unlocksAt: timestamp (ms), timerId }
@@ -4899,7 +4929,80 @@ async function importData(e){
   try{
     const text = await file.text();
     const json = JSON.parse(text);
-    if(!json.data || !Array.isArray(json.data)) throw new Error('Invalid format');
+
+    // Deteksi format encrypted backup (dari doEncExport)
+    if(json && json.type === 'vault-encrypted-backup'){
+      if(json.pwMode === 'custom'){
+        // Butuh password untuk decrypt envelope dulu
+        if(!json.salt || !json.iv || typeof json.data !== 'string'){
+          throw new Error('Invalid encrypted backup format');
+        }
+        // Simpan bundle untuk diproses setelah user input password
+        _backupPending = json;
+        document.getElementById('backupPwInput').value = '';
+        document.getElementById('backupPwMsg').textContent = '';
+        document.getElementById('backupPwInput').style.borderColor = 'var(--border)';
+        document.getElementById('backupPwModal').classList.add('show');
+        // Penting: simpan _key SEBELUM modal terbuka (sama seperti importTrigger)
+        // _importSessionKey sudah di-set di importTrigger, tidak perlu di-set ulang
+        return;
+      } else if(json.pwMode === 'master'){
+        // Master mode: data adalah array biasa, salt sudah di bundle
+        // Normalisasi ke format yang dipahami flow lama
+        if(!Array.isArray(json.data)) throw new Error('Invalid encrypted backup format');
+        await processImportJson({ v: json.v || 3, salt: json.salt || '', data: json.data });
+        return;
+      } else {
+        throw new Error('Unknown backup mode');
+      }
+    }
+
+    // Format lama (plain export)
+    await processImportJson(json);
+  }catch(err){
+    showToast(t('toast.importFail',{msg:err.message}),'err');
+    _importPending = null;
+    _backupPending = null;
+  }
+}
+
+// Confirm backup password — decrypt envelope lalu lanjutkan ke flow import normal
+async function confirmBackupPw(){
+  const bundle = _backupPending;
+  if(!bundle) return;
+  const pw = document.getElementById('backupPwInput').value;
+  const msgEl = document.getElementById('backupPwMsg');
+  if(!pw){ msgEl.textContent = 'Enter backup password'; return; }
+  msgEl.textContent = 'Decrypting...';
+  try{
+    const backupSalt = b64ToBuf(bundle.salt);
+    const backupKey = await deriveKey(pw, backupSalt);
+    const iv = b64ToBuf(bundle.iv);
+    const ct = b64ToBuf(bundle.data);
+    const ptBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, backupKey, ct);
+    const inner = JSON.parse(new TextDecoder().decode(ptBuf));
+    if(!inner || !Array.isArray(inner.data)) throw new Error('Backup payload invalid');
+    // Berhasil — tutup modal, lanjut ke flow normal
+    document.getElementById('backupPwModal').classList.remove('show');
+    _backupPending = null;
+    await processImportJson({ v: inner.v || 3, salt: inner.salt || '', data: inner.data });
+  }catch(err){
+    msgEl.textContent = 'Wrong password or corrupt backup';
+    document.getElementById('backupPwInput').style.borderColor = 'var(--danger)';
+  }
+}
+
+function cancelBackupPw(){
+  document.getElementById('backupPwModal').classList.remove('show');
+  _backupPending = null;
+  _importSessionKey = null;
+  showToast(t('toast.importCancelled'),'warn');
+}
+
+// Proses payload import (sudah dalam format {v, salt, data:[items]})
+// Dipisahkan dari importData supaya flow encrypted-backup bisa reuse
+async function processImportJson(json){
+  if(!json || !json.data || !Array.isArray(json.data)) throw new Error('Invalid format');
 
     // ===== VALIDASI SCHEMA PER-ITEM =====
     const REQUIRED_FIELDS = ['title','username','password'];
@@ -4939,10 +5042,6 @@ async function importData(e){
     _importPending = json;
     document.getElementById('importCount').textContent = json.data.length;
     document.getElementById('importModal').classList.add('show');
-  }catch(err){
-    showToast(t('toast.importFail',{msg:err.message}),'err');
-    _importPending = null;
-  }
 }
 
 function cancelImportPw(){
@@ -5012,6 +5111,19 @@ async function doImport(mode){
         const username = await decrypt(row.username);
         const password = await decrypt(row.password);
         const notes    = row.notes ? await decrypt(row.notes) : '';
+        // Decrypt totp_secret dengan srcKey
+        const totp     = row.totp_secret ? await decrypt(row.totp_secret) : '';
+        // Decrypt custom_fields values dengan srcKey
+        const cfDecrypted = [];
+        if(row.custom_fields && Array.isArray(row.custom_fields) && row.custom_fields.length){
+          for(const cf of row.custom_fields){
+            let val = '';
+            if(cf && cf.value){
+              try { val = await decrypt(cf.value); } catch(e){ val = ''; }
+            }
+            cfDecrypted.push({ ...cf, _plainValue: val });
+          }
+        }
         _key = currentKey;
         // Metadata: decrypt if encrypted, else use as-is (legacy backup)
         let importCat = row.category || 'other';
@@ -5024,11 +5136,22 @@ async function doImport(mode){
         else if(typeof row.breachStatus === 'number'){ importBreachStatus = row.breachStatus; }
         if(typeof row.breachCheckedAt === 'string' && _isEncMeta(row.breachCheckedAt)){ _key = srcKey; importBreachCheckedAt = await decryptMeta(row.breachCheckedAt, null); _key = currentKey; }
         else if(typeof row.breachCheckedAt === 'string' && row.breachCheckedAt){ importBreachCheckedAt = row.breachCheckedAt; }
+        // Re-encrypt custom_fields values dengan currentKey
+        const cfReencrypted = [];
+        for(const cf of cfDecrypted){
+          const { _plainValue, ...rest } = cf;
+          cfReencrypted.push({
+            ...rest,
+            value: _plainValue ? await encrypt(_plainValue) : '',
+          });
+        }
         clean = {
           title:    await encrypt(title),
           username: await encrypt(username),
           password: await encrypt(password),
           notes:    notes ? await encrypt(notes) : '',
+          totp_secret: totp ? await encrypt(totp) : '',
+          custom_fields: cfReencrypted,
           color:    typeof row.color === 'number' ? row.color : 0,
           category: await encryptMeta(importCat),
           favorite: row.favorite === true,
@@ -5057,6 +5180,8 @@ async function doImport(mode){
           username: row.username || '',
           password: row.password || '',
           notes:    (typeof row.notes === 'string' && row.notes) ? row.notes : '',
+          totp_secret: (typeof row.totp_secret === 'string' && row.totp_secret) ? row.totp_secret : '',
+          custom_fields: (Array.isArray(row.custom_fields) ? row.custom_fields : []),
           color:    typeof row.color === 'number' ? row.color : 0,
           category: importCat,
           favorite: row.favorite === true,
