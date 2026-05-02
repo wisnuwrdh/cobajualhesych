@@ -5251,6 +5251,33 @@ async function doChangePw(){
       tx.onerror    = rej;
     });
 
+    // Bug2 FIX: re-encrypt share_log entries (itemTitle + link) with new key
+    const allShareLog = await new Promise((res,rej)=>{
+      const tx = db.transaction(SHARE_LOG_STORE,'readonly');
+      const req = tx.objectStore(SHARE_LOG_STORE).getAll();
+      req.onsuccess = ()=>res(req.result);
+      req.onerror   = ()=>rej(req.error);
+    });
+    const reencSL = [];
+    for(const sl of allShareLog){
+      let title = ''; let link = '';
+      try{ title = sl.itemTitle ? await decryptWith(oldKey, sl.itemTitle) : ''; }catch{}
+      try{ link  = sl.link      ? await decryptWith(oldKey, sl.link)      : ''; }catch{}
+      reencSL.push({
+        ...sl,
+        itemTitle: title ? await encryptWith(newKey, title) : '',
+        link:      link  ? await encryptWith(newKey, link)  : '',
+      });
+    }
+    await new Promise((res,rej)=>{
+      const tx = db.transaction(SHARE_LOG_STORE,'readwrite');
+      const store = tx.objectStore(SHARE_LOG_STORE);
+      store.clear();
+      reencSL.forEach(r => store.put(r));
+      tx.oncomplete = res;
+      tx.onerror    = rej;
+    });
+
     await setVerifier(newPw, salt);
     _key = newKey;
     // Refresh bio session dengan password baru
@@ -5806,6 +5833,7 @@ async function copyTOTP(itemId){
   try{
     const code = await generateTOTP(s.secret);
     await navigator.clipboard.writeText(code);
+    setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000); // L7: auto-clear TOTP
     const secs = totpSecsRemaining();
     showToast(t('totp.copyToast',{s:secs}),'ok');
     // Flash copied state
@@ -5943,16 +5971,20 @@ async function renderShareLog(containerId){
 }
 
 async function copyShareLogLink(slid){
+  // Bug1 FIX: decrypt link before copying — log.link is encrypted ciphertext (H7)
   try{
-    const tx = db.transaction(SHARE_LOG_STORE,'readonly');
-    const req = tx.objectStore(SHARE_LOG_STORE).get(slid);
-    req.onsuccess = async ()=>{
-      const log = req.result;
-      if(!log) return;
-      await navigator.clipboard.writeText(log.link);
-      showToast(t('share.logCopied'),'ok');
-    };
-  }catch(e){}
+    const log = await new Promise((res,rej)=>{
+      const tx = db.transaction(SHARE_LOG_STORE,'readonly');
+      const req = tx.objectStore(SHARE_LOG_STORE).get(slid);
+      req.onsuccess = ()=>res(req.result);
+      req.onerror   = ()=>rej(req.error);
+    });
+    if(!log || !log.link) return;
+    const plainLink = await decrypt(log.link);
+    await navigator.clipboard.writeText(plainLink);
+    showToast(t('share.logCopied'),'ok');
+    setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000);
+  }catch(e){ showToast('Could not copy link','err'); }
 }
 
 async function deleteShareLog(slid, containerId){
@@ -6427,6 +6459,7 @@ async function copyCFValueDP(itemId, idx){
   try{
     const val = await decrypt(item.custom_fields[idx].value||'');
     await navigator.clipboard.writeText(val);
+    setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000); // L7: auto-clear custom field
     showToast(t('toast.copied'));
   }catch(e){ showToast('Copy failed','err'); }
 }
@@ -6734,6 +6767,7 @@ async function useSpecificPassword(pw){
 async function copyGenPasswordOnly(){
   try{
     await navigator.clipboard.writeText(_genState.currentPw);
+    setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000); // L7: auto-clear generated pw
     showToast('Copied!', 'ok');
   }catch(e){}
 }
@@ -6877,7 +6911,10 @@ document.addEventListener('click', function(e){
   if(copyBtn){
     const i = parseInt(copyBtn.dataset.bulkCopy);
     const pw = _genState.bulkPasswords[i];
-    if(pw) navigator.clipboard.writeText(pw).then(()=>showToast('Copied!','ok')).catch(()=>{});
+    if(pw) navigator.clipboard.writeText(pw).then(()=>{
+      showToast('Copied!','ok');
+      setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000); // L7: auto-clear history pw
+    }).catch(()=>{});
   }
   if(useBtn){
     const i = parseInt(useBtn.dataset.bulkUse);
@@ -7094,6 +7131,7 @@ async function copyHistEntry(hid){
   try{
     const plain = await decrypt(entry.encPassword);
     await navigator.clipboard.writeText(plain);
+    setTimeout(()=>{ navigator.clipboard.writeText('').catch(()=>{}); }, 30000); // L7: auto-clear history pw
     showToast('Password copied','ok');
   } catch(e){ showToast('Failed to copy','err'); }
 }
@@ -7777,7 +7815,6 @@ async function uploadVault(force=false){
 
   const encryptedVault = await encryptVaultForSync();
   const localUpdatedAt = new Date().toISOString();
-  localStorage.setItem(_SYNC_TS_KEY, localUpdatedAt);
 
   try{
     const res = await fetch('/api/sync', {
@@ -7786,6 +7823,10 @@ async function uploadVault(force=false){
       body: JSON.stringify({ license, deviceId, action: 'upload', encryptedVault, localUpdatedAt })
     });
     const data = await res.json();
+    // Bug4 FIX: only save localTs after confirmed success — prevents stale ts on failed upload
+    if(data && data.success){
+      localStorage.setItem(_SYNC_TS_KEY, localUpdatedAt);
+    }
     return data;
   }catch(e){
     return { success: false, error: e.message };
@@ -8101,14 +8142,27 @@ async function syncOnUnlock(){
     const cloudData = await downloadVault();
     if(!cloudData) return;
     const localTs = localStorage.getItem(_SYNC_TS_KEY);
-    const cloudNewer = !localTs || new Date(cloudData.updatedAt) > new Date(localTs);
     const localEmpty = _items.length === 0;
+
+    // Bug3 FIX: clock skew tolerance — server timestamp always slightly ahead of client
+    // Only show modal if cloud is >30s newer to avoid false positives on same device
+    const SKEW_TOLERANCE_MS = 30 * 1000;
+    let cloudNewer = false;
+    if(!localTs){
+      cloudNewer = true;
+    } else {
+      const diff = new Date(cloudData.updatedAt).getTime() - new Date(localTs).getTime();
+      cloudNewer = diff > SKEW_TOLERANCE_MS;
+    }
+
+    // OpsiB FIX: skip modal if cloud was uploaded by this same device — no need to import own data
+    const cloudFromMe = cloudData.lastDeviceId && cloudData.lastDeviceId === getDeviceId();
 
     if(localEmpty){
       // Vault lokal kosong — selalu tampilkan banner, jangan modal paksa
       showCloudBanner(cloudData);
-    } else if(cloudNewer){
-      // Cloud lebih baru dan lokal ada data — tampilkan modal import
+    } else if(cloudNewer && !cloudFromMe){
+      // Cloud lebih baru DAN di-upload device lain — tampilkan modal import
       showSyncImportModal(cloudData);
     }
   }catch(e){}
