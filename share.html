@@ -35,6 +35,10 @@ body{
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
 }
+.logo-img{width:36px;height:36px;display:block;object-fit:contain}
+.logo-img-light{display:none}
+[data-theme="light"] .logo-img-dark{display:none}
+[data-theme="light"] .logo-img-light{display:block}
 .logo-name{font-size:18px;font-weight:600;letter-spacing:-.3px}
 .logo-sub{font-size:11px;color:var(--dim);font-family:var(--mono)}
 .card{
@@ -139,13 +143,8 @@ body{
 <div class="container">
   <div class="logo">
     <div class="logo-mark">
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
-        <rect width="64" height="64" rx="14" fill="#0a0a0c"/>
-        <path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="#f0f0f4"/>
-        <circle cx="32" cy="28" r="7" fill="#0a0a0c"/>
-        <path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="#0a0a0c"/>
-        <circle cx="32" cy="28" r="2.8" fill="#7c6af7"/>
-      </svg>
+      <img src="logo-dark.webp" class="logo-img logo-img-dark" alt="" width="36" height="36">
+      <img src="logo-light.webp" class="logo-img logo-img-light" alt="" width="36" height="36">
     </div>
     <div>
       <div class="logo-name">Hesych</div>

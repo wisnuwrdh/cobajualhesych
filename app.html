@@ -113,11 +113,14 @@ svg{display:block;flex-shrink:0}
   box-shadow:0 0 0 1.5px var(--border), 0 4px 16px rgba(0,0,0,.10);
 }
 [data-theme="light"] .sidebar-brand-mark,
-[data-theme="light"] .app-title svg:first-child {
+[data-theme="light"] .app-title img:first-child {
   border-radius:6px;
   outline:1.5px solid var(--border);
 }
-
+.logo-img{display:block;object-fit:contain}
+.logo-img-light{display:none}
+[data-theme="light"] .logo-img-dark{display:none}
+[data-theme="light"] .logo-img-light{display:block}
 .lock-title{
   font-size:20px;font-weight:600;
   letter-spacing:-.4px;
@@ -1623,7 +1626,7 @@ svg{display:block;flex-shrink:0}
     overflow: hidden;
     flex-shrink: 0;
   }
-  .sidebar-brand-mark svg { width: 28px; height: 28px; display: block; }
+  .sidebar-brand-mark img { width: 28px; height: 28px; display: block; }
   .sidebar-brand-name {
     font-size: 15px;
     font-weight: 600;
@@ -2029,7 +2032,7 @@ svg{display:block;flex-shrink:0}
 
 <!-- LOCK SCREEN -->
 <div id="lockScreen">
-  <div class="lock-mark"><svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="14" fill="var(--logo-bg)"/><path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="var(--logo-fg)"/><circle cx="32" cy="28" r="7" fill="var(--logo-bg)"/><path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="var(--logo-bg)"/><circle cx="32" cy="28" r="2.8" fill="#7c6af7"/></svg></div>
+  <div class="lock-mark"><img src="logo-dark.webp" class="logo-img logo-img-dark" alt="" width="56" height="56"><img src="logo-light.webp" class="logo-img logo-img-light" alt="" width="56" height="56"></div>
   <div class="lock-title">Hesych</div>
   <div class="lock-mode-badge badge-unlock" id="lockModeBadge">
     <span class="badge-dot"></span>
@@ -2101,7 +2104,7 @@ svg{display:block;flex-shrink:0}
 
     <!-- Brand -->
     <div class="sidebar-brand">
-      <div class="sidebar-brand-mark"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="14" fill="var(--logo-bg)"/><path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="var(--logo-fg)"/><circle cx="32" cy="28" r="7" fill="var(--logo-bg)"/><path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="var(--logo-bg)"/><circle cx="32" cy="28" r="2.8" fill="#7c6af7"/></svg></div>
+      <div class="sidebar-brand-mark"><img src="logo-dark.webp" class="logo-img logo-img-dark" alt="" width="28" height="28"><img src="logo-light.webp" class="logo-img logo-img-light" alt="" width="28" height="28"></div>
       <span class="sidebar-brand-name">Hesych</span>
       <span class="sidebar-brand-count" id="sidebarCount">0</span>
     </div>
@@ -2208,7 +2211,7 @@ svg{display:block;flex-shrink:0}
 
   <div class="appbar">
     <div class="app-title">
-      <svg width="22" height="22" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="14" fill="var(--logo-bg)"/><path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="var(--logo-fg)"/><circle cx="32" cy="28" r="7" fill="var(--logo-bg)"/><path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="var(--logo-bg)"/><circle cx="32" cy="28" r="2.8" fill="#7c6af7"/></svg>
+      <img src="logo-dark.webp" class="logo-img logo-img-dark" alt="" width="22" height="22"><img src="logo-light.webp" class="logo-img logo-img-light" alt="" width="22" height="22">
       Hesych
       <span class="count-badge" id="countBadge">0</span>
     </div>
@@ -7600,13 +7603,8 @@ function renderLicenseSheet(){
     body.innerHTML = `
       <div class="premium-gate" style="margin-bottom:16px">
         <div class="premium-gate-icon">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
-            <rect width="64" height="64" rx="14" fill="var(--logo-bg)"/>
-            <path d="M32 9 L52 20.5 L52 43.5 L32 55 L12 43.5 L12 20.5 Z" fill="var(--logo-fg)"/>
-            <circle cx="32" cy="28" r="7" fill="var(--logo-bg)"/>
-            <path d="M28.5 33.5 L28.5 44 Q28.5 46 32 46 Q35.5 46 35.5 44 L35.5 33.5 Q35.5 31 32 31 Q28.5 31 28.5 33.5 Z" fill="var(--logo-bg)"/>
-            <circle cx="32" cy="28" r="2.8" fill="#7c6af7"/>
-          </svg>
+          <img src="logo-dark.webp" class="logo-img logo-img-dark" alt="" width="36" height="36">
+          <img src="logo-light.webp" class="logo-img logo-img-light" alt="" width="36" height="36">
         </div>
         <div class="premium-gate-title">${t('premium.locked')}</div>
         <div class="premium-gate-desc">${t('premium.lockedDesc')}</div>
