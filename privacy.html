@@ -52,7 +52,7 @@ a:hover{text-decoration:underline}
 }
 .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
 .brand-mark{width:24px;height:24px;border-radius:6px;overflow:hidden;flex-shrink:0;display:grid;place-items:center}
-.logo-img{width:24px;height:24px;display:block;object-fit:contain}
+.logo-img{display:block;object-fit:contain;pointer-events:none;-webkit-touch-callout:none;user-select:none}
 .logo-img-light{display:none}
 [data-theme="light"] .logo-img-dark{display:none}
 [data-theme="light"] .logo-img-light{display:block}
@@ -147,6 +147,8 @@ ul.doc-list li::before{
     </a>
   </div>
 </nav>
+
+<div class="wrap">
 
   <a href="./index.html" class="back">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
