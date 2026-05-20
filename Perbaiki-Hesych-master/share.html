@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Vault — Shared Item</title>
+<link href="fonts.css" rel="stylesheet"/>
+<link href="share.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-mark">
+      <img src="logo-dark.webp" class="logo-img logo-img-dark" alt="" width="36" height="36">
+      <img src="logo-light.webp" class="logo-img logo-img-light" alt="" width="36" height="36">
+    </div>
+    <div>
+      <div class="logo-name">Hesych</div>
+      <div class="logo-sub">Encrypted Share</div>
+    </div>
+  </div>
+
+  <div class="card" id="mainCard">
+    <!-- State: loading -->
+    <div id="stateLoading" style="text-align:center;padding:20px 0;color:var(--sub);font-size:13px">
+      Loading…
+    </div>
+
+    <!-- State: error (expired / invalid) -->
+    <div id="stateError" style="display:none">
+      <div class="state-error">
+        <div class="state-error-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="state-error-title" id="errorTitle">Link Expired</div>
+        <div class="state-error-desc" id="errorDesc">This shared link has expired or is invalid.</div>
+      </div>
+    </div>
+
+    <!-- State: unlock form -->
+    <div id="stateUnlock" style="display:none">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span id="sharedItemTitle">Shared Item</span>
+      </div>
+      <div class="card-sub">Enter the passphrase to view this shared password. Ask the sender if you don't have it.</div>
+      <div class="field-label">Passphrase</div>
+      <div class="pw-input-wrap">
+        <input type="password" class="pw-input" id="passphraseInput"
+          placeholder="Enter passphrase…"/>
+        <button class="eye-btn" id="eyeToggleBtn" type="button">
+          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="msg" id="unlockMsg"></div>
+      <button class="btn-primary" id="unlockBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        View Password
+      </button>
+    </div>
+
+    <!-- State: result -->
+    <div id="stateResult" style="display:none">
+      <div class="card-title" style="margin-bottom:16px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        <span id="resultTitle">Shared Item</span>
+      </div>
+      <div id="resultFields"></div>
+      <div class="expiry-bar" id="expiryBar">
+        <span class="expiry-dot" id="expiryDot"></span>
+        <span id="expiryText"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Encrypted with AES-256-GCM · <a href="./app.html">Get Vault</a> — your own password manager
+  </div>
+</div>
+
+<script src="share.js"></script>
+</body>
+</html>
