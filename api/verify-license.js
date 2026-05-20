@@ -62,10 +62,10 @@ async function removeDevice(licenseKey, deviceId) {
 
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // M8 FIX: reject requests from non-hesych.com origins (defense in depth)
+  // M1 FIX: reject requests missing Origin or from non-hesych.com origins
   const origin = req.headers['origin'];
   const allowedOrigins = ['https://hesych.com', 'https://www.hesych.com'];
-  if (origin && !allowedOrigins.includes(origin)) {
+  if (!origin || !allowedOrigins.includes(origin)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -87,6 +87,13 @@ export default async function handler(req, res) {
   }
 
   const key = license.trim();
+
+  // M4 FIX: validate formats before hitting Supabase
+  const KEY_RE = /^[A-Za-z0-9\-]{4,64}$/;
+  if (!KEY_RE.test(key)) return res.status(400).json({ valid: false, error: 'Invalid license format' });
+  // SECURITY NOTE: Configure Supabase RLS policies for defense-in-depth:
+  // vault_sync + license_devices: ENABLE RLS with policy license_key = auth.uid() or
+  // a custom claim. Until RLS is configured, service_role_key bypasses RLS.
 
   // H9 FIX: action=list and action=remove now verify device ownership before proceeding
   // Handle list devices
@@ -112,6 +119,8 @@ export default async function handler(req, res) {
   if (!deviceId || typeof deviceId !== 'string') {
     return res.status(400).json({ valid: false, error: 'Missing device ID' });
   }
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(deviceId)) return res.status(400).json({ valid: false, error: 'Invalid deviceId format' });
 
   // Verify via Gumroad
   const gumroadResult = await verifyGumroadKey(key);

@@ -3,13 +3,19 @@
 
 // BUMP versi ini setiap kali deploy agar cache lama otomatis dihapus
 // Format: 'hesych-v{major}.{minor}' — contoh: v1.1, v1.2, v2.0
-// M4 FIX: bumped to v1.4 — cache now validates response integrity before storing
-const CACHE_NAME = 'hesych-v1.4';
+// H1 FIX: bumped to v1.5 — app.js/app.css/share.js/share.css extracted from HTML
+// v1.6: force cache bust — hidden class !important + bio session fix
+// v1.7: force cache bust — forceLegacy bio fix + conflict resolution
+const CACHE_NAME = 'hesych-v1.7';
 
 const ASSETS = [
   '/app.html',
+  '/app.js',
+  '/app.css',
   '/upgrade.html',
   '/share.html',
+  '/share.js',
+  '/share.css',
   '/privacy.html',
   '/terms.html',
   '/manifest.json',

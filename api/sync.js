@@ -69,10 +69,10 @@ async function isDeviceRegistered(licenseKey, deviceId) {
 
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // M8 FIX: reject requests from non-hesych.com origins (defense in depth)
+  // M1 FIX: reject requests missing Origin or from non-hesych.com origins
   const origin = req.headers['origin'];
   const allowedOrigins = ['https://hesych.com', 'https://www.hesych.com'];
-  if (origin && !allowedOrigins.includes(origin)) {
+  if (!origin || !allowedOrigins.includes(origin)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -94,6 +94,15 @@ export default async function handler(req, res) {
   }
 
   const key = license.trim();
+
+  // M4 FIX: validate formats before hitting Supabase
+  const KEY_RE = /^[A-Za-z0-9\-]{4,64}$/;
+  if (!KEY_RE.test(key)) return res.status(400).json({ error: 'Invalid license format' });
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(deviceId)) return res.status(400).json({ error: 'Invalid deviceId format' });
+  // SECURITY NOTE: Configure Supabase RLS policies for defense-in-depth:
+  // vault_sync + license_devices: ENABLE RLS with policy license_key = auth.uid() or
+  // a custom claim. Until RLS is configured, service_role_key bypasses RLS.
 
   // Cek device sudah terdaftar
   const registered = await isDeviceRegistered(key, deviceId);
