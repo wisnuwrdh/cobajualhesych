@@ -33,7 +33,7 @@
   "description": "Local-first password manager with AES-256-GCM encryption. Zero-knowledge, one-time payment, no subscription.",
   "url": "https://hesych.com",
   "applicationCategory": "SecurityApplication",
-  "operatingSystem": "Web, iOS, Android",
+  "operatingSystem": "Web",
   "offers": {
     "@type": "Offer",
     "price": "9.99",
@@ -50,6 +50,54 @@
     "HIBP breach check",
     "Offline-first, no internet required",
     "One-time payment, no subscription"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Where is my data stored?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All password data is encrypted with AES-256-GCM and stored only on your device. The encryption key is derived from your master password using PBKDF2. Without your master password, not even we can open your vault. Zero-knowledge by design."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is One-Time Payment?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You pay $9.99 once and get all Premium features forever, including free updates. No monthly bills, no auto-renew. The opposite of every other password manager."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use it offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Hesych runs 100% locally on your device. No internet needed to open your vault, generate passwords, or autofill forms. Cloud sync on Premium is optional and can be disabled anytime."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if I forget my master password?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Your vault is encrypted with a key derived entirely from your master password. We have zero access to it. If you forget your master password, your vault cannot be recovered. No backdoor means no one can unlock it for you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is Hesych different from Bitwarden?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bitwarden is cloud-native — your encrypted vault lives on their servers. Hesych is local-first: your data never leaves your device unless you explicitly enable cloud sync. On pricing: Bitwarden Premium is $1.65/month ($19.80/year). Hesych is $9.99, once, forever."
+      }
+    }
   ]
 }
 </script>
@@ -776,7 +824,7 @@
           <span class="dot"></span>
           <span>Zero-Knowledge</span>
           <span class="dot"></span>
-          <span>Open Audit</span>
+          <span>No Telemetry</span>
         </div>
       </div>
       <div class="hero-visual-col">
@@ -1024,9 +1072,9 @@
         <li><span class="check">✓</span><span >All Premium features, forever</span></li>
         <li><span class="check">✓</span><span >End-to-end encrypted cloud sync</span></li>
         <li><span class="check">✓</span><span >Vault Health Score &amp; duplicate audit</span></li>
-        <li><span class="check">✓</span><span >Encrypted Export &amp; password expiry</span></li>
+        <li><span class="check">✓</span><span >Encrypted Export &amp; automatic backups</span></li>
         <li><span class="check">✓</span><span >Custom Fields, Tags &amp; Share Link</span></li>
-        <li><span class="check">✓</span><span >Free updates for next version</span></li>
+        <li><span class="check">✓</span><span >Free updates, forever</span></li>
         <li><span class="check">✓</span><span >Priority email support</span></li>
       </ul>
 

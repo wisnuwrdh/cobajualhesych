@@ -197,7 +197,7 @@ ul.doc-list li::before{
   <section>
     <h2><span class="sec-num">3.</span> How Your Vault Data is Handled</h2>
     <div class="highlight">
-      Your vault is encrypted with AES-256-GCM using a key derived from your master password via PBKDF2 with 600,000 iterations. The encrypted data is stored in your browser's IndexedDB, locally on your device. It never leaves your device unless you explicitly use the Cloud Sync feature (coming in v1.1).
+      Your vault is encrypted with AES-256-GCM using a key derived from your master password via PBKDF2 with 600,000 iterations. The encrypted data is stored in your browser's IndexedDB, locally on your device. It never leaves your device unless you explicitly use the Cloud Sync feature.
     </div>
     <p>This means even if our servers were compromised, there is no vault data to steal. We are zero-knowledge by architecture, not just by policy.</p>
   </section>
