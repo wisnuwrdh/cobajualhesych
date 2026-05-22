@@ -797,7 +797,7 @@
       </span>
     </span>
     <div class="nav-right">
-      <a href="./app.html" class="btn btn-sm btn-primary">Open Hesych</a>
+      <a href="./app" class="btn btn-sm btn-primary">Open Hesych</a>
     </div>
   </div>
 </nav>
@@ -816,8 +816,8 @@
         </h1>
         <p class="hero-sub">Local AES-256 encryption. No cloud. Pay once, yours forever.</p>
         <div class="hero-ctas">
-          <a href="./app.html" class="btn btn-lg">Try Free</a>
-          <a href="./upgrade.html" class="btn btn-lg btn-primary">Buy Now — $9.99</a>
+          <a href="./app" class="btn btn-lg">Try Free</a>
+          <a href="./upgrade" class="btn btn-lg btn-primary">Buy Now — $9.99</a>
         </div>
         <div class="hero-meta">
           <span>AES-256-GCM</span>
@@ -1079,7 +1079,7 @@
       </ul>
 
       <div class="price-cta">
-        <a href="./upgrade.html" class="btn btn-lg btn-primary btn-block" >Buy Now — $9.99</a>
+        <a href="./upgrade" class="btn btn-lg btn-primary btn-block" >Buy Now — $9.99</a>
       </div>
       <p class="price-foot" >30-day money-back guarantee · No questions asked · One-time payment</p>
       </div><!-- /.price-card -->
@@ -1170,8 +1170,8 @@
       <div>
         <div class="foot-col-title">Product</div>
         <ul class="foot-links">
-          <li><a href="./app.html">Open App</a></li>
-          <li><a href="./upgrade.html">Upgrade to Premium</a></li>
+          <li><a href="./app">Open App</a></li>
+          <li><a href="./upgrade">Upgrade to Premium</a></li>
           <li><a href="./#compare">Compare Plans</a></li>
         </ul>
       </div>
@@ -1181,8 +1181,8 @@
         <div class="foot-col-title">Company</div>
         <ul class="foot-links">
           <li><a href="mailto:hi@hesych.com">Contact</a></li>
-          <li><a href="./privacy.html">Privacy Policy</a></li>
-          <li><a href="./terms.html">Terms of Service</a></li>
+          <li><a href="./privacy">Privacy Policy</a></li>
+          <li><a href="./terms">Terms of Service</a></li>
         </ul>
       </div>
 
@@ -1204,7 +1204,7 @@
 <script>
 /* Redirect ke app.html kalau dibuka sebagai PWA installed */
 if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-  window.location.replace('./app.html');
+  window.location.replace('./app');
 }
 
 /* Apply theme from system preference */
@@ -1218,7 +1218,7 @@ if (window.matchMedia('(prefers-color-scheme: light)').matches) {
 document.querySelectorAll('[data-modal]').forEach(b => {
   b.addEventListener('click', (e) => {
     e.preventDefault();
-    window.location.href = './upgrade.html';
+    window.location.href = './upgrade';
   });
 });
 

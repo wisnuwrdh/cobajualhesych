@@ -1,4 +1,5 @@
 {
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/sw.js",
@@ -10,7 +11,7 @@
       ]
     },
     {
-      "source": "/(index|app|upgrade|share|privacy|terms).html",
+      "source": "/(index|app|upgrade|share|privacy|terms)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -19,7 +20,7 @@
       ]
     },
     {
-      "source": "/app.html",
+      "source": "/app",
       "headers": [
         {
           "key": "Content-Security-Policy",
@@ -28,7 +29,7 @@
       ]
     },
     {
-      "source": "/share.html",
+      "source": "/share",
       "headers": [
         {
           "key": "Content-Security-Policy",

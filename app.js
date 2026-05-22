@@ -3674,7 +3674,7 @@ async function doGenerateShareLink(){
       d:btoa(String.fromCharCode(...new Uint8Array(enc))),
     };
     const base = window.location.href.replace(/[^/]*$/,'');
-    _shareState.generatedLink = `${base}share.html#${btoa(JSON.stringify(bundle))}`;
+    _shareState.generatedLink = `${base}share#${btoa(JSON.stringify(bundle))}`;
     // Save to share log
     try{
       await shareLogAdd({

@@ -5,19 +5,19 @@
 // Format: 'hesych-v{major}.{minor}' — contoh: v1.1, v1.2, v2.0
 // H1 FIX: bumped to v1.5 — app.js/app.css/share.js/share.css extracted from HTML
 // v1.6: force cache bust — hidden class !important + bio session fix
-// v1.7: force cache bust — forceLegacy bio fix + conflict resolution
-const CACHE_NAME = 'hesych-v1.7';
+// v1.8: clean URLs — removed .html extensions
+const CACHE_NAME = 'hesych-v1.8';
 
 const ASSETS = [
-  '/app.html',
+  '/app',
   '/app.js',
   '/app.css',
-  '/upgrade.html',
-  '/share.html',
+  '/upgrade',
+  '/share',
   '/share.js',
   '/share.css',
-  '/privacy.html',
-  '/terms.html',
+  '/privacy',
+  '/terms',
   '/manifest.json',
   '/og-image.png',
   '/icon-192.png',
@@ -74,7 +74,7 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request) || caches.match('/app.html'))
+        .catch(() => caches.match(event.request) || caches.match('/app'))
     );
   } else {
     // Cache-first untuk assets (icon, gambar, manifest)
@@ -95,7 +95,7 @@ self.addEventListener('fetch', event => {
           return response;
         }).catch(() => {
           if (event.request.destination === 'document') {
-            return caches.match('/app.html');
+            return caches.match('/app');
           }
         });
       })
