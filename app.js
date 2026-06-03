@@ -4396,7 +4396,9 @@ function showConfirm({ icon='⚠️', title, desc, okText, cancelText, okClass='
     onOk(showInput ? val : undefined); 
   });
   document.getElementById('confirmModalCancel').addEventListener('click', close);
-  document.getElementById('confirmModalOverlay').addEventListener('click', close, { once: true });
+  setTimeout(()=>{
+    document.getElementById('confirmModalOverlay').addEventListener('click', close, { once: true });
+  }, 300);
 }
 
 // Smooth scroll sheet when keyboard appears on mobile
@@ -5853,6 +5855,10 @@ function showCloudBanner(cloudData){
 }
 
 function showSyncImportModal(cloudData){
+  // Tutup sheet yang mungkin masih terbuka agar tidak conflict dengan confirmModal
+  const licenseSheet = document.getElementById('licenseSheet');
+  if(licenseSheet && licenseSheet.classList.contains('show')) closeLicenseSheet();
+
   showConfirm({
     icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
     title: 'Cloud Vault Found',
