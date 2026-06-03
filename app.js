@@ -4364,12 +4364,14 @@ function showConfirm({ icon='⚠️', title, desc, okText, cancelText, okClass='
   const inputWrap = document.getElementById('confirmModalInputWrap');
   const inputEl = document.getElementById('confirmModalInput');
   if(showInput){
+    inputWrap.classList.remove('hidden');
     inputWrap.style.display = 'block';
     inputEl.placeholder = inputPlaceholder || '';
     inputEl.type = inputType || 'text';
     inputEl.value = '';
     setTimeout(()=>inputEl.focus(), 100);
   } else {
+    inputWrap.classList.add('hidden');
     inputWrap.style.display = 'none';
     inputEl.value = '';
   }
@@ -5805,11 +5807,8 @@ async function syncOnUnlock(){
     // OpsiB FIX: skip modal if cloud was uploaded by this same device — no need to import own data
     const cloudFromMe = cloudData.lastDeviceId && cloudData.lastDeviceId === getDeviceId();
 
-    if(localEmpty){
-      // Vault lokal kosong — selalu tampilkan banner, jangan modal paksa
-      showCloudBanner(cloudData);
-    } else if(cloudNewer && !cloudFromMe){
-      // Cloud lebih baru DAN di-upload device lain — tampilkan modal import
+    if(localEmpty || (cloudNewer && !cloudFromMe)){
+      // Vault lokal kosong ATAU cloud lebih baru dari device lain — tampilkan modal import
       showSyncImportModal(cloudData);
     }
   }catch(e){}
