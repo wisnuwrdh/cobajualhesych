@@ -5505,13 +5505,8 @@ async function downloadVault(){
 }
 
 async function applyCloudVault(cloudData, masterPassword){
-  // masterPassword: string yang diinput user (master password dari device asal)
+  // masterPassword: string yang diinput user, atau null untuk coba dengan _key lokal
   // cloudData.encryptedVault: JSON wrapper { v:3, salt, payload } (v3) atau plain JSON {items} (v2)
-  // Steps:
-  //   1. Parse wrapper from server
-  //   2. Derive cloudKey = PBKDF2(masterPassword, cloudSalt) — cloudSalt from wrapper
-  //   3. (v3) Decrypt envelope payload with cloudKey to get inner { items }
-  //   4. Decrypt each item field with cloudKey, re-encrypt with local _key
   try{
     const wrapper = await decryptVaultFromSync(cloudData.encryptedVault);
     if(!wrapper) return false;
@@ -5531,14 +5526,35 @@ async function applyCloudVault(cloudData, masterPassword){
       return false;
     }
 
-    // Derive cloud key from masterPassword + cloud salt
+    // Derive cloud key:
+    // - Kalau masterPassword null (auto-sync), coba pakai _key lokal langsung
+    //   (works kalau vault diupload dari device yang sama/password sama)
+    // - Kalau masterPassword diberikan, derive dari password + cloud salt
     const cloudSalt = b64ToBuf(cloudSaltB64);
-    const cloudKey = await deriveKey(masterPassword, cloudSalt);
+    let cloudKey;
+    const localSalt = localStorage.getItem('vault_salt') || '';
+    const sameDevice = cloudSaltB64 === localSalt;
+
+    if(masterPassword === null){
+      if(sameDevice){
+        // Salt sama → password sama → pakai _key langsung
+        cloudKey = _key;
+      } else {
+        // Salt beda → password mungkin beda → perlu konfirmasi user
+        return 'need_pw';
+      }
+    } else {
+      cloudKey = await deriveKey(masterPassword, cloudSalt);
+    }
 
     // For v3: decrypt the envelope to extract items
     if(wrapper.v === 3){
       const inner = await decryptSyncInner(wrapper, cloudKey);
-      if(!inner || !inner.items) return false; // wrong master password
+      if(!inner || !inner.items){
+        // Kalau auto-sync gagal (password beda tapi salt sama?), minta password
+        if(masterPassword === null) return 'need_pw';
+        return false; // wrong master password
+      }
       items = inner.items;
     }
 
@@ -5707,8 +5723,23 @@ async function manualSync(){
       const cloudNewer = localEmpty || (localTs ? new Date(cloudTs) > new Date(localTs) : false);
 
       if(cloudNewer){
-        // Cloud lebih baru ATAU lokal kosong — download dari cloud
-        showSyncImportModal(cloudData);
+        // Cloud lebih baru — langsung download dan apply, user sudah sengaja tap sync
+        showToast('Downloading from cloud...', '');
+        const ok = await applyCloudVault(cloudData, null);
+        if(ok === 'need_pw'){
+          // Vault dari device lain dengan password berbeda — perlu konfirmasi password
+          showSyncImportModal(cloudData);
+        } else if(ok){
+          await loadItems();
+          _filter = 'all';
+          const searchEl = document.getElementById('search');
+          if(searchEl) searchEl.value = '';
+          render();
+          showToast(`Vault synced from cloud (${_items.length} items)`, 'ok');
+        } else {
+          // Kemungkinan password sama device — coba langsung, kalau gagal minta password
+          showSyncImportModal(cloudData);
+        }
         return;
       } else {
         // Lokal lebih baru dan tidak kosong — upload
@@ -5875,7 +5906,7 @@ function showSyncImportModal(cloudData){
       if(!masterPw){ showToast('Master password required', 'error'); return; }
       showToast('Importing vault...', '');
       const ok = await applyCloudVault(cloudData, masterPw);
-      if(ok){
+      if(ok === true){
         // Bug #1 fix: ensure UI fully re-renders after import.
         // - reload _items from the freshly written IndexedDB rows
         // - reset filter & search so imported items aren't hidden by
