@@ -1811,6 +1811,7 @@ async function toggleFav(id){
   const raw = (await dbAll()).find(r=>r.id===id);
   if(raw){ raw.favorite = item.favorite; await dbPut(raw); }
   showToast(item.favorite ? t('toast.favAdded') : t('toast.favRemoved'));
+  autoUpload();
   render();
 }
 
@@ -2693,6 +2694,7 @@ async function doChangePw(){
     // Refresh bio session dengan password baru
     if(isBiometricSupported()) await setBioSession(newPw, { forceLegacy: true });
     await loadItems(); render();
+    autoUpload();
     closeChangePw();
     showToast(t('toast.cpSuccess'),'ok');
   }catch(e){
@@ -5700,10 +5702,11 @@ async function manualSync(){
     if(cloudData){
       const localTs = localStorage.getItem(_SYNC_TS_KEY);
       const cloudTs = cloudData.updatedAt;
-      const cloudNewer = !localTs || new Date(cloudTs) > new Date(localTs);
+      // Jika localTs null tapi ada data lokal, anggap lokal lebih baru (belum pernah upload)
       const localEmpty = _items.length === 0;
+      const cloudNewer = localEmpty || (localTs ? new Date(cloudTs) > new Date(localTs) : false);
 
-      if(cloudNewer || localEmpty){
+      if(cloudNewer){
         // Cloud lebih baru ATAU lokal kosong — download dari cloud
         showSyncImportModal(cloudData);
         return;
