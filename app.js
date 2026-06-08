@@ -995,8 +995,7 @@ async function showApp(){
 function lockVault(){
   _key=null; _items=[];_expanded.clear();_revealed.clear();
   unmountAllTOTP();
-  // Clear secret lock timers — vault terkunci, timer tidak boleh fire saat vault locked
-  // Data sudah tersimpan di localStorage via saveSecretLocks sebelumnya
+  // Clear secret timers saat lock — akan di-restore saat unlock via loadSecretLocks
   _secretTimers.forEach(t => clearTimeout(t));
   _secretTimers.clear();
   _secretLocks.clear();
@@ -5364,8 +5363,13 @@ function setSyncSpinning(on){
 async function encryptVaultForSync(){
   const raw = await dbAll();
   const salt = localStorage.getItem('vault_salt') || '';
-  // Inner content: only items + itemCount (salt is in the outer wrapper)
-  const inner = JSON.stringify({ items: raw, itemCount: raw.length, ts: Date.now() });
+  // Sertakan secret locks agar state terjaga saat sync/restore
+  const secretLocksData = [];
+  _secretLocks.forEach((lock, id) => {
+    secretLocksData.push({ id, lockedAt: lock.lockedAt, durationMs: lock.durationMs });
+  });
+  // Inner content: items + itemCount + secretLocks
+  const inner = JSON.stringify({ items: raw, itemCount: raw.length, ts: Date.now(), secretLocks: secretLocksData });
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
@@ -5540,11 +5544,15 @@ async function applyCloudVault(cloudData, masterPassword){
     const cloudSalt = b64ToBuf(cloudSaltB64);
     const cloudKey = await deriveKey(masterPassword, cloudSalt);
 
+    // Secret locks dari cloud (kalau ada)
+    let cloudSecretLocks = null;
+
     // For v3: decrypt the envelope to extract items
     if(wrapper.v === 3){
       const inner = await decryptSyncInner(wrapper, cloudKey);
       if(!inner || !inner.items) return false; // wrong master password
       items = inner.items;
+      cloudSecretLocks = Array.isArray(inner.secretLocks) ? inner.secretLocks : null;
     }
 
     if(!items || !Array.isArray(items)) return false;
@@ -5688,6 +5696,36 @@ async function applyCloudVault(cloudData, masterPassword){
     });
 
     localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
+
+    // Restore secret locks dari cloud
+    _secretTimers.forEach(t => clearTimeout(t));
+    _secretTimers.clear();
+    _secretLocks.clear();
+    if(cloudSecretLocks && cloudSecretLocks.length > 0){
+      const now = Date.now();
+      for(const entry of cloudSecretLocks){
+        const elapsed = now - entry.lockedAt;
+        if(elapsed >= entry.durationMs) continue; // sudah expired, skip
+        const remMs = entry.durationMs - elapsed;
+        _secretLocks.set(entry.id, {
+          lockedAt: entry.lockedAt,
+          perfStart: performance.now() - elapsed,
+          durationMs: entry.durationMs,
+        });
+        const timerId = setTimeout(()=>{
+          _secretLocks.delete(entry.id);
+          _secretTimers.delete(entry.id);
+          saveSecretLocks().catch(()=>{});
+          showToast(t('toast.secretExpired',{name:_items.find(i=>i.id===entry.id)?.title||'item'}), 'ok');
+          render();
+        }, remMs);
+        _secretTimers.set(entry.id, timerId);
+      }
+      saveSecretLocks().catch(()=>{});
+    } else {
+      localStorage.removeItem('vault_secret_locks');
+    }
+
     return true;
   }catch(e){
     console.error('applyCloudVault error:', e);
