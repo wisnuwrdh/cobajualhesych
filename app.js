@@ -2485,9 +2485,15 @@ async function doImport(mode){
     await loadItems();
     _importSessionKey = null; // bersihkan session key
 
-    // Reset idle timer — import bisa lama, timer tidak boleh terkunci setelah selesai
+    // Clear secret timers lama yang mungkin stale setelah data di-replace
+    _secretTimers.forEach(t => clearTimeout(t));
+    _secretTimers.clear();
+    _secretLocks.clear();
+    await loadSecretLocks();
+
+    // Reset idle timer — import bisa lama, jangan langsung terkunci setelah selesai
     resetIdleTimer();
-    // Reset filter & search state agar item yang diimport tidak tersembunyi
+    // Reset filter & search agar item yang diimport tidak tersembunyi
     _filter = 'all';
     const searchEl = document.getElementById('search');
     if(searchEl) searchEl.value = '';
@@ -5512,8 +5518,13 @@ async function downloadVault(){
 }
 
 async function applyCloudVault(cloudData, masterPassword){
-  // masterPassword: string dari user, atau null untuk auto-mode (coba pakai _key lokal)
+  // masterPassword: string yang diinput user (master password dari device asal)
   // cloudData.encryptedVault: JSON wrapper { v:3, salt, payload } (v3) atau plain JSON {items} (v2)
+  // Steps:
+  //   1. Parse wrapper from server
+  //   2. Derive cloudKey = PBKDF2(masterPassword, cloudSalt) — cloudSalt from wrapper
+  //   3. (v3) Decrypt envelope payload with cloudKey to get inner { items }
+  //   4. Decrypt each item field with cloudKey, re-encrypt with local _key
   try{
     const wrapper = await decryptVaultFromSync(cloudData.encryptedVault);
     if(!wrapper) return false;
@@ -5555,7 +5566,7 @@ async function applyCloudVault(cloudData, masterPassword){
     if(wrapper.v === 3){
       const inner = await decryptSyncInner(wrapper, cloudKey);
       if(!inner || !inner.items){
-        if(masterPassword === null) return 'need_pw'; // auto-mode gagal, minta password
+        if(masterPassword === null) return 'need_pw';
         return false; // wrong master password
       }
       items = inner.items;
@@ -5702,7 +5713,12 @@ async function applyCloudVault(cloudData, masterPassword){
     });
 
     localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
-    // Reset idle timer — proses decrypt/re-encrypt bisa lama, jangan terkunci setelah selesai
+    // Clear secret timers lama yang stale setelah vault di-replace
+    _secretTimers.forEach(t => clearTimeout(t));
+    _secretTimers.clear();
+    _secretLocks.clear();
+    await loadSecretLocks();
+    // Reset idle timer — proses bisa lama, jangan langsung terkunci setelah selesai
     resetIdleTimer();
     return true;
   }catch(e){
@@ -5728,17 +5744,16 @@ async function manualSync(){
       const cloudNewer = localEmpty || (localTs ? new Date(cloudTs) > new Date(localTs) : false);
 
       if(cloudNewer){
-        // Cloud lebih baru — coba apply langsung, tampilkan modal password hanya jika perlu
+        // Cloud lebih baru — coba apply langsung tanpa modal kalau salt sama
         showToast('Downloading from cloud...', '');
         const ok = await applyCloudVault(cloudData, null);
         if(ok === 'need_pw' || ok === false){
-          // Vault dari device lain — perlu konfirmasi password
           showSyncImportModal(cloudData);
         } else if(ok === true){
           await loadItems();
           _filter = 'all';
-          const searchEl = document.getElementById('search');
-          if(searchEl) searchEl.value = '';
+          const srEl = document.getElementById('search');
+          if(srEl) srEl.value = '';
           render();
           showToast(`Vault synced from cloud (${_items.length} items)`, 'ok');
         }
