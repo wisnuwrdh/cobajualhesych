@@ -2485,6 +2485,13 @@ async function doImport(mode){
     await loadItems();
     _importSessionKey = null; // bersihkan session key
 
+    // Reset idle timer — import bisa lama, timer tidak boleh terkunci setelah selesai
+    resetIdleTimer();
+    // Reset filter & search state agar item yang diimport tidak tersembunyi
+    _filter = 'all';
+    const searchEl = document.getElementById('search');
+    if(searchEl) searchEl.value = '';
+
     if(document.getElementById('app').style.display !== 'none'){
       render();
     }
@@ -5505,7 +5512,7 @@ async function downloadVault(){
 }
 
 async function applyCloudVault(cloudData, masterPassword){
-  // masterPassword: string yang diinput user, atau null untuk coba dengan _key lokal
+  // masterPassword: string dari user, atau null untuk auto-mode (coba pakai _key lokal)
   // cloudData.encryptedVault: JSON wrapper { v:3, salt, payload } (v3) atau plain JSON {items} (v2)
   try{
     const wrapper = await decryptVaultFromSync(cloudData.encryptedVault);
@@ -5527,9 +5534,8 @@ async function applyCloudVault(cloudData, masterPassword){
     }
 
     // Derive cloud key:
-    // - Kalau masterPassword null (auto-sync), coba pakai _key lokal langsung
-    //   (works kalau vault diupload dari device yang sama/password sama)
-    // - Kalau masterPassword diberikan, derive dari password + cloud salt
+    // - null (auto-mode): pakai _key lokal kalau salt sama, return 'need_pw' kalau beda
+    // - string: derive dari password + cloud salt seperti biasa
     const cloudSalt = b64ToBuf(cloudSaltB64);
     let cloudKey;
     const localSalt = localStorage.getItem('vault_salt') || '';
@@ -5537,11 +5543,9 @@ async function applyCloudVault(cloudData, masterPassword){
 
     if(masterPassword === null){
       if(sameDevice){
-        // Salt sama → password sama → pakai _key langsung
-        cloudKey = _key;
+        cloudKey = _key; // salt sama → password sama → pakai _key langsung
       } else {
-        // Salt beda → password mungkin beda → perlu konfirmasi user
-        return 'need_pw';
+        return 'need_pw'; // salt beda → perlu password dari user
       }
     } else {
       cloudKey = await deriveKey(masterPassword, cloudSalt);
@@ -5551,8 +5555,7 @@ async function applyCloudVault(cloudData, masterPassword){
     if(wrapper.v === 3){
       const inner = await decryptSyncInner(wrapper, cloudKey);
       if(!inner || !inner.items){
-        // Kalau auto-sync gagal (password beda tapi salt sama?), minta password
-        if(masterPassword === null) return 'need_pw';
+        if(masterPassword === null) return 'need_pw'; // auto-mode gagal, minta password
         return false; // wrong master password
       }
       items = inner.items;
@@ -5699,6 +5702,8 @@ async function applyCloudVault(cloudData, masterPassword){
     });
 
     localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
+    // Reset idle timer — proses decrypt/re-encrypt bisa lama, jangan terkunci setelah selesai
+    resetIdleTimer();
     return true;
   }catch(e){
     console.error('applyCloudVault error:', e);
@@ -5723,22 +5728,19 @@ async function manualSync(){
       const cloudNewer = localEmpty || (localTs ? new Date(cloudTs) > new Date(localTs) : false);
 
       if(cloudNewer){
-        // Cloud lebih baru — langsung download dan apply, user sudah sengaja tap sync
+        // Cloud lebih baru — coba apply langsung, tampilkan modal password hanya jika perlu
         showToast('Downloading from cloud...', '');
         const ok = await applyCloudVault(cloudData, null);
-        if(ok === 'need_pw'){
-          // Vault dari device lain dengan password berbeda — perlu konfirmasi password
+        if(ok === 'need_pw' || ok === false){
+          // Vault dari device lain — perlu konfirmasi password
           showSyncImportModal(cloudData);
-        } else if(ok){
+        } else if(ok === true){
           await loadItems();
           _filter = 'all';
           const searchEl = document.getElementById('search');
           if(searchEl) searchEl.value = '';
           render();
           showToast(`Vault synced from cloud (${_items.length} items)`, 'ok');
-        } else {
-          // Kemungkinan password sama device — coba langsung, kalau gagal minta password
-          showSyncImportModal(cloudData);
         }
         return;
       } else {
