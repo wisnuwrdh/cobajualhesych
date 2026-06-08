@@ -995,6 +995,11 @@ async function showApp(){
 function lockVault(){
   _key=null; _items=[];_expanded.clear();_revealed.clear();
   unmountAllTOTP();
+  // Clear secret lock timers — vault terkunci, timer tidak boleh fire saat vault locked
+  // Data sudah tersimpan di localStorage via saveSecretLocks sebelumnya
+  _secretTimers.forEach(t => clearTimeout(t));
+  _secretTimers.clear();
+  _secretLocks.clear();
   // Bersihkan clipboard saat lock
   try{ navigator.clipboard.writeText(''); }catch{}
   document.getElementById('lockScreen').style.display='flex';
@@ -2484,19 +2489,6 @@ async function doImport(mode){
     if(!_key) _key = currentKey;
     await loadItems();
     _importSessionKey = null; // bersihkan session key
-
-    // Clear secret timers lama — jangan re-load karena vault_secret_locks bisa dari vault berbeda
-    _secretTimers.forEach(t => clearTimeout(t));
-    _secretTimers.clear();
-    _secretLocks.clear();
-    localStorage.removeItem('vault_secret_locks');
-
-    // Reset idle timer — import bisa lama, jangan langsung terkunci
-    resetIdleTimer();
-    // Reset filter & search agar item tidak tersembunyi
-    _filter = 'all';
-    const searchEl = document.getElementById('search');
-    if(searchEl) searchEl.value = '';
 
     if(document.getElementById('app').style.display !== 'none'){
       render();
@@ -5544,25 +5536,14 @@ async function applyCloudVault(cloudData, masterPassword){
       return false;
     }
 
-    // Derive cloud key: null = auto-mode (pakai _key lokal jika salt sama)
+    // Derive cloud key from masterPassword + cloud salt
     const cloudSalt = b64ToBuf(cloudSaltB64);
-    let cloudKey;
-    const localSalt = localStorage.getItem('vault_salt') || '';
-    const sameDevice = cloudSaltB64 === localSalt;
-    if(masterPassword === null){
-      if(sameDevice){ cloudKey = _key; }
-      else { return 'need_pw'; }
-    } else {
-      cloudKey = await deriveKey(masterPassword, cloudSalt);
-    }
+    const cloudKey = await deriveKey(masterPassword, cloudSalt);
 
     // For v3: decrypt the envelope to extract items
     if(wrapper.v === 3){
       const inner = await decryptSyncInner(wrapper, cloudKey);
-      if(!inner || !inner.items){
-        if(masterPassword === null) return 'need_pw';
-        return false;
-      }
+      if(!inner || !inner.items) return false; // wrong master password
       items = inner.items;
     }
 
@@ -5707,12 +5688,6 @@ async function applyCloudVault(cloudData, masterPassword){
     });
 
     localStorage.setItem(_SYNC_TS_KEY, cloudData.updatedAt);
-    // Clear secret timers lama — jangan re-load dari localStorage karena itu data vault lama
-    _secretTimers.forEach(t => clearTimeout(t));
-    _secretTimers.clear();
-    _secretLocks.clear();
-    // Reset idle timer — proses bisa lama, jangan langsung terkunci
-    resetIdleTimer();
     return true;
   }catch(e){
     console.error('applyCloudVault error:', e);
@@ -5737,18 +5712,8 @@ async function manualSync(){
       const cloudNewer = localEmpty || (localTs ? new Date(cloudTs) > new Date(localTs) : false);
 
       if(cloudNewer){
-        showToast('Downloading from cloud...', '');
-        const ok = await applyCloudVault(cloudData, null);
-        if(ok === 'need_pw' || ok === false){
-          showSyncImportModal(cloudData);
-        } else if(ok === true){
-          await loadItems();
-          _filter = 'all';
-          const srEl = document.getElementById('search');
-          if(srEl) srEl.value = '';
-          render();
-          showToast(`Vault synced from cloud (${_items.length} items)`, 'ok');
-        }
+        // Cloud lebih baru ATAU lokal kosong — download dari cloud
+        showSyncImportModal(cloudData);
         return;
       } else {
         // Lokal lebih baru dan tidak kosong — upload
@@ -5915,7 +5880,7 @@ function showSyncImportModal(cloudData){
       if(!masterPw){ showToast('Master password required', 'error'); return; }
       showToast('Importing vault...', '');
       const ok = await applyCloudVault(cloudData, masterPw);
-      if(ok === true){
+      if(ok){
         // Bug #1 fix: ensure UI fully re-renders after import.
         // - reload _items from the freshly written IndexedDB rows
         // - reset filter & search so imported items aren't hidden by
