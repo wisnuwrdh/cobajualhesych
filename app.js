@@ -847,8 +847,7 @@ async function unlock(){
     showApp();
     updateBioUI();
     updateSyncUI();
-    verifyDeviceRegistration(); // cek apakah device masih terdaftar
-    syncOnUnlock(); // auto-download cloud vault jika premium
+    syncOnUnlock(); // auto-download cloud vault
   }catch(e){
     setMsg('Error: '+e.message,'err');
     clearLoading(isSetup ? t('lock.createBtn') : t('lock.unlockBtn'));
