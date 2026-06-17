@@ -74,7 +74,7 @@ Set these in your Vercel project dashboard:
 
 ### 4. Done
 
-Your app is live at `https://your-project.vercel.app`.
+Your app is live at `https://your-project.vercel.app` — root URL redirects to the app automatically.
 
 ## Custom Domain
 
@@ -93,34 +93,31 @@ All brand assets are plain files — no build step required.
 | Logo (dark) | `logo-dark.webp` |
 | Logo (light) | `logo-light.webp` |
 | Favicon | `favicon.ico` |
-| OG Image | `og-image.png` |
 | App Icons | `icon-192.png`, `icon-512.png` |
-| App Name | `manifest.json`, `index.html` (title & meta tags), `app.html` (app title) |
+| App Name | `app.html` (title), `manifest.json` |
 | Theme colors | CSS variables in `app.css` |
-| Footer links | `index.html`, `app.html` |
 
 ## File Structure
 
 ```
 hesych/
-├── index.html          # Landing page
 ├── app.html            # Main app shell
 ├── app.js              # App logic (6250 lines)
 ├── app.css             # Styles
 ├── sw.js               # Service worker (offline cache)
-├── vercel.json         # Vercel config (CSP, headers)
+├── vercel.json         # Vercel config (redirect, CSP, headers)
 ├── manifest.json       # PWA manifest
 ├── share.html          # Shared password viewer
 ├── share.js            # Share link decryption
 ├── share.css           # Share page styles
-├── privacy.html        # Privacy policy
-├── terms.html          # Terms of service
 ├── fonts.css           # Font declarations
 ├── fonts/              # Font files
 ├── favicons/           # Brand favicon database
 ├── api/
 │   ├── sync.js         # Cloud sync serverless function
 │   └── package.json    # API dependencies
+├── README.md           # This file
+├── LICENSE.txt         # License terms
 └── *.webp / *.png      # Logos and icons
 ```
 
