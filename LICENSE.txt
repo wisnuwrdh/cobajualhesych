@@ -1,6 +1,6 @@
 REGULAR LICENSE
 
-Copyright (c) 2026
+Copyright (c) 2026 Hesych 
 
 Permission is granted to the purchaser of this source code, for use by a
 single individual or single organization, to:
