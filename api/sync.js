@@ -2,7 +2,6 @@
 // Cloud Sync untuk Hesych — upload & download encrypted vault
 //
 // Required env vars:
-//   GUMROAD_PRODUCT_ID        — Product ID dari Gumroad dashboard
 //   SUPABASE_URL              — Supabase project URL
 //   SUPABASE_SERVICE_ROLE_KEY — Supabase service role key
 //   UPSTASH_REDIS_REST_URL    — Upstash Redis REST URL
@@ -11,8 +10,6 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
-// Upstash Redis rate limiter — persistent across all Vercel instances
-// max 20 requests per IP per 15 minutes (sliding window)
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(20, '15 m'),
@@ -56,26 +53,8 @@ async function upsertVault(licenseKey, encryptedVault, deviceId) {
   });
 }
 
-// ── Verify license is registered (device must be activated) ──────────────
-async function isDeviceRegistered(licenseKey, deviceId) {
-  const { url, headers } = getSupabase();
-  const res = await fetch(
-    `${url}/rest/v1/license_devices?license_key=eq.${encodeURIComponent(licenseKey)}&device_id=eq.${encodeURIComponent(deviceId)}&select=device_id`,
-    { headers }
-  );
-  const data = await res.json();
-  return data.length > 0;
-}
-
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // M1 FIX: reject requests missing Origin or from non-hesych.com origins
-  const origin = req.headers['origin'];
-  const allowedOrigins = ['https://hesych.com', 'https://www.hesych.com'];
-  if (!origin || !allowedOrigins.includes(origin)) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -103,12 +82,6 @@ export default async function handler(req, res) {
   // SECURITY NOTE: Configure Supabase RLS policies for defense-in-depth:
   // vault_sync + license_devices: ENABLE RLS with policy license_key = auth.uid() or
   // a custom claim. Until RLS is configured, service_role_key bypasses RLS.
-
-  // Cek device sudah terdaftar
-  const registered = await isDeviceRegistered(key, deviceId);
-  if (!registered) {
-    return res.status(403).json({ error: 'Device not registered. Activate license first.' });
-  }
 
   // ── DOWNLOAD ─────────────────────────────────────────────────────────
   if (action === 'download') {

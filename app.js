@@ -1178,7 +1178,7 @@ function render(){
   }
 
   // Apply advanced filters (premium)
-  if(isPremium() && countAdvFilters()>0){
+  if(countAdvFilters()>0){
     if(_advFilter.tags.length){
       filtered = filtered.filter(i=>
         _advFilter.tags.every(tag=>(i.tags||[]).includes(tag))
@@ -3512,26 +3512,6 @@ let _shareState = { itemId: null, expiry: 86400000, generatedLink: null };
 function openShareSheet(id){
   _shareState = { itemId: id, expiry: 86400000, generatedLink: null };
   const body = document.getElementById('shareSheetBody');
-  if(!isPremium()){
-    body.innerHTML = `
-      <div class="premium-gate">
-        <div class="premium-gate-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        </div>
-        <div class="premium-gate-title">${t('share.title')}</div>
-        <div class="premium-gate-desc">${t('share.premiumHint')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
-          <button class="btn-upgrade">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            ${t('premium.upgradeBtn')}
-          </button>
-        </a>
-        <button class="btn-upgrade-secondary" data-action="closeShareOpenLicense">${t('premium.enterKey')}</button>
-      </div>`;
-    document.getElementById('shareOverlay').classList.add('show');
-    document.getElementById('shareSheet').classList.add('show');
-    return;
-  }
   renderShareForm();
   document.getElementById('shareOverlay').classList.add('show');
   document.getElementById('shareSheet').classList.add('show');
@@ -3712,17 +3692,6 @@ function renderTagForm(){
   const area = document.getElementById('tagFormArea');
   if(!area) return;
   const isPro = isPremium();
-  if(!isPro){
-    area.innerHTML = `
-      <div class="cf-premium-gate">
-        <div>
-          <div style="font-size:12px;font-weight:500;color:var(--accent)">${t('tags.label')} <span class="premium-badge" style="font-size:8px">PRO</span></div>
-          <div style="font-size:11px;color:var(--dim);margin-top:2px">${t('tags.premiumHint')}</div>
-        </div>
-        <button class="gen-action-btn primary" style="font-size:11px;padding:6px 10px;flex-shrink:0" data-action="closeModalOpenLicense">Upgrade</button>
-      </div>`;
-    return;
-  }
   const chips = _tagFormTags.map((tag,i)=>`
     <span class="tag-chip removable" data-action="removeTag" data-id="${i}">
       #${esc(tag)}
@@ -3778,21 +3747,6 @@ function toggleAdvFilter(){
   const panel = document.getElementById('advFilterPanel');
   panel.classList.toggle('open');
   document.getElementById('advFilterBtn').classList.toggle('active', panel.classList.contains('open'));
-  if(!isPremium() && panel.classList.contains('open')){
-    panel.innerHTML = `
-      <div class="premium-gate" style="margin:0">
-        <div class="premium-gate-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        </div>
-        <div class="premium-gate-title">${t('tags.filterTitle')}</div>
-        <div class="premium-gate-desc">${t('tags.premiumHint')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
-          <button class="btn-upgrade">${t('premium.upgradeBtn')}</button>
-        </a>
-        <button class="btn-upgrade-secondary" data-action="openLicense">${t('premium.enterKey')}</button>
-      </div>`;
-    return;
-  }
   if(panel.classList.contains('open')) renderAdvFilterPanel();
 }
 
@@ -3878,18 +3832,6 @@ function renderCFForm(){
   const gate = document.getElementById('cfFormGate');
   if(!list || !gate) return;
   const isPro = isPremium();
-  if(!isPro){
-    list.innerHTML = '';
-    gate.innerHTML = `
-      <div class="cf-premium-gate">
-        <div>
-          <div style="font-size:12px;font-weight:500;color:var(--accent)">${t('cf.label')} <span class="premium-badge" style="font-size:8px">PRO</span></div>
-          <div style="font-size:11px;color:var(--dim);margin-top:2px">${t('cf.premiumHint')}</div>
-        </div>
-        <button class="gen-action-btn primary" style="font-size:11px;padding:6px 10px;flex-shrink:0" data-action="closeModalOpenLicense">Upgrade</button>
-      </div>`;
-    return;
-  }
   gate.innerHTML = '';
   list.innerHTML = _cfFormFields.map((f,i)=>`
     <div class="cf-form-item">
@@ -4252,10 +4194,9 @@ function _renderGenBody(){
       </div>`;
   }
 
-  // Bulk section (premium)
+  // Bulk section
   let bulkSection = '';
-  if(isPro){
-    bulkSection = `
+  bulkSection = `
       <div class="gen-option-row" style="margin-top:4px">
         <div><div class="gen-option-label">${t('gen.bulk')}</div>
         <div class="gen-option-sub">${t('gen.bulkCount',{n:5})}</div></div>
@@ -4273,16 +4214,7 @@ function _renderGenBody(){
             </div>`).join('')}
           <button class="gen-action-btn secondary" style="width:100%;margin-top:4px" data-action="copyAllBulk">${t('gen.copyAll')}</button>
         </div>` : ''}`;
-  } else {
-    bulkSection = `
-      <div style="background:var(--accent-dim);border:1px solid #3a2f7a;border-radius:8px;padding:10px 12px;margin-top:8px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:12px;font-weight:500;color:var(--accent)">${t('gen.bulk')} <span class="premium-badge" style="font-size:8px">PRO</span></div>
-          <div style="font-size:11px;color:var(--dim);margin-top:2px">${t('gen.premiumHint')}</div>
-        </div>
-        <button class="gen-action-btn primary" style="font-size:11px;padding:6px 10px" data-action="closeGenOpenLicense">Upgrade</button>
-      </div>`;
-  }
+
 
   document.getElementById('genSheetBody').innerHTML = `
     ${pwModeOptions}
@@ -4426,7 +4358,6 @@ if(window.visualViewport){
     'genSheet':      ()=> closeGenSheet(),
     'historySheet':()=> closeHistorySheet(),
     'encExportSheet':()=> closeEncExport(),
-    'licenseSheet':  ()=> closeLicenseSheet(),
     'healthSheet':   ()=> closeHealthSheet(),
   };
 
@@ -4881,14 +4812,7 @@ const _LICENSE_KEY = 'vault_license';
 // ========================================================
 
 
-function isPremium(){
-  try{
-    const raw = localStorage.getItem(_LICENSE_KEY);
-    if(!raw) return false;
-    const verified = localStorage.getItem(_LICENSE_KEY + '_verified');
-    return verified === '1';
-  }catch(e){ return false; }
-}
+function isPremium(){ return true; }
 
 function getLicensePayload(){
   try{
@@ -4966,10 +4890,6 @@ function deactivateLicense(){
 }
 
 function updatePremiumUI(){
-  const premium = isPremium();
-  const label = document.getElementById('licenseMenuLabel');
-  if(label) label.setAttribute('data-i18n', premium ? 'premium.manageItem' : 'premium.menuItem');
-  if(label) label.textContent = t(premium ? 'premium.manageItem' : 'premium.menuItem');
   updateSyncUI();
 }
 
@@ -5194,29 +5114,6 @@ async function replaceDevice(licenseKey, oldDeviceId){
 
 // ===== VAULT HEALTH =====
 function openHealthSheet(){
-  if(!isPremium()){
-    // Show gate inside sheet
-    document.getElementById('healthSheetBody').innerHTML = `
-      <div class="premium-gate">
-        <div class="premium-gate-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        </div>
-        <div class="premium-gate-title">${t('health.title')}</div>
-        <div class="premium-gate-desc">${t('health.premiumHint')}</div>
-        <a href="https://hesych.gumroad.com/l/bgxpiu" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
-          <button class="btn-upgrade">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            ${t('premium.upgradeBtn')}
-          </button>
-        </a>
-        <button class="btn-upgrade-secondary" data-action="closeLicenseOpenHealth">
-          ${t('premium.enterKey')}
-        </button>
-      </div>`;
-    document.getElementById('healthOverlay').classList.add('show');
-    document.getElementById('healthSheet').classList.add('show');
-    return;
-  }
   document.getElementById('healthSheetBody').innerHTML =
     `<p style="font-size:13px;color:var(--sub);text-align:center;padding:20px 0">${t('health.scanning')}</p>`;
   document.getElementById('healthOverlay').classList.add('show');
@@ -5339,7 +5236,7 @@ function getSyncIcon(){ return document.getElementById('syncMenuItem')?.querySel
 function updateSyncUI(){
   const btn = document.getElementById('syncMenuItem');
   if(!btn) return;
-  if(isPremium()) btn.classList.remove('hidden'); else btn.classList.add('hidden');
+  btn.classList.remove('hidden');
 }
 
 function setSyncSpinning(on){
@@ -5735,7 +5632,6 @@ async function applyCloudVault(cloudData, masterPassword){
 
 async function manualSync(){
   if(_syncInProgress) return;
-  if(!isPremium()){ showToast('Premium required for sync'); return; }
   _syncInProgress = true;
   setSyncSpinning(true);
 
@@ -5808,7 +5704,6 @@ async function autoUpload(){
 
 // Verifikasi apakah device masih terdaftar di Supabase
 async function verifyDeviceRegistration(){
-  if(!isPremium()) return;
   const license = localStorage.getItem(_LICENSE_KEY);
   const deviceId = getDeviceId();
   if(!license || !deviceId) return;
@@ -5834,7 +5729,6 @@ async function verifyDeviceRegistration(){
 
 // Auto-download saat pertama unlock (kalau premium)
 async function syncOnUnlock(){
-  if(!isPremium()) return;
   try{
     const cloudData = await downloadVault();
     if(!cloudData) return;
@@ -5902,8 +5796,6 @@ function showCloudBanner(cloudData){
 
 function showSyncImportModal(cloudData){
   // Tutup sheet yang mungkin masih terbuka agar tidak conflict dengan confirmModal
-  const licenseSheet = document.getElementById('licenseSheet');
-  if(licenseSheet && licenseSheet.classList.contains('show')) closeLicenseSheet();
 
   showConfirm({
     icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
@@ -6039,9 +5931,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
     if(document.getElementById('healthSheet').classList.contains('show')){
       closeHealthSheet(); return;
-    }
-    if(document.getElementById('licenseSheet').classList.contains('show')){
-      closeLicenseSheet(); return;
     }
     if(document.getElementById('sheet').classList.contains('show')){
       closeModal(); return;
@@ -6182,7 +6071,6 @@ document.addEventListener('DOMContentLoaded', function _wireHandlers() {
   _id('sidebarHealthBtn').addEventListener('click', openHealthSheet);
   _id('sidebarBreachBtn').addEventListener('click', checkAllBreaches);
   _id('sidebarLockBtn').addEventListener('click', lockVault);
-  _id('sidebarLicenseBtn').addEventListener('click', openLicenseSheet);
 
   // Header toolbar
   _id('themeToggleBtn').addEventListener('click', toggleTheme);
@@ -6195,7 +6083,6 @@ document.addEventListener('DOMContentLoaded', function _wireHandlers() {
   _id('overflowChangePwBtn').addEventListener('click', () => { openChangePw(); closeOverflow(); });
   _id('healthMenuItem').addEventListener('click', () => { openHealthSheet(); closeOverflow(); });
   _id('syncMenuItem').addEventListener('click', () => { manualSync(); closeOverflow(); });
-  _id('licenseMenuItem').addEventListener('click', () => { openLicenseSheet(); closeOverflow(); });
 
   // Filter chips
   ['all','fav','social','finance','email','work','shopping','gaming','other'].forEach(f => {
@@ -6286,8 +6173,6 @@ document.addEventListener('DOMContentLoaded', function _wireHandlers() {
   _id('historyCloseBtn').addEventListener('click', closeHistorySheet);
   _id('encExportOverlay').addEventListener('click', closeEncExport);
   _id('encExportCloseBtn').addEventListener('click', closeEncExport);
-  _id('licenseOverlay').addEventListener('click', closeLicenseSheet);
-  _id('licenseCloseBtn').addEventListener('click', closeLicenseSheet);
   _id('healthOverlay').addEventListener('click', closeHealthSheet);
   _id('healthCloseBtn').addEventListener('click', closeHealthSheet);
 
@@ -6335,7 +6220,6 @@ document.addEventListener('click', function _handleDataAction(e){
     case 'deleteHistEntry':        deleteHistEntry(id); break;
     case 'toggleHistReveal':       toggleHistReveal(id); break;
     case 'copyHistEntry':          copyHistEntry(id); break;
-    case 'deactivateLicense':      deactivateLicense(); break;
     case 'closeModal':             closeModal(); break;
     case 'genModePassword':        _genState.mode='password'; regenGen(); break;
     case 'genModePassphrase':      _genState.mode='passphrase'; regenGen(); break;
@@ -6345,23 +6229,15 @@ document.addEventListener('click', function _handleDataAction(e){
     case 'copyAllBulk':            copyAllBulk(); break;
     case 'doEncExport':            doEncExport(); break;
     case 'closeEncExport':         closeEncExport(); break;
-    case 'doActivateLicense':      doActivateLicense(); break;
-    case 'renderLicenseSheet':     renderLicenseSheet(); break;
     case 'closeHealthSheet':       closeHealthSheet(); break;
-    case 'closeHealthOpenLicense': closeHealthSheet(); openLicenseSheet(); break;
     case 'healthEditItem':         closeHealthSheet(); openEdit(id); break;
-    case 'closeLicenseOpenHealth': closeLicenseSheet(); closeHealthSheet(); openLicenseSheet(); break;
     case 'cloudBannerImport':      (function(){ const b=document.getElementById('cloudBanner'); showSyncImportModal(window._pendingCloudData); if(b) b.remove(); })(); break;
     case 'cloudBannerDismiss':     (function(){ const b=document.getElementById('cloudBanner'); if(b) b.remove(); })(); break;
     case 'cfTypeToggle':           if(idx!==undefined){ _cfFormFields[idx].type=_cfFormFields[idx].type==='password'?'text':'password'; renderCFForm(); } break;
     case 'cfRemoveField':          if(idx!==undefined){ _cfFormFields.splice(idx,1); renderCFForm(); } break;
-    case 'closeModalOpenLicense':  closeModal(); openLicenseSheet(); break;
-    case 'closeGenOpenLicense':    closeGenSheet(); openLicenseSheet(); break;
     case 'clearAdvFilters':        clearAdvFilters(); break;
-    case 'deactivateDevice':       replaceDevice(el.dataset.license, el.dataset.device); break;
     case 'copyShareLogLink':       copyShareLogLink(id); break;
     case 'deleteShareLog':         deleteShareLog(id, el.dataset.container); break;
-    case 'closeShareOpenLicense':  closeShareSheet(); openLicenseSheet(); break;
     case 'doGenerateShareLink':    doGenerateShareLink(); break;
     case 'copyShareLink':          copyShareLink(); break;
     case 'shareRegenerate':        _shareState.generatedLink=null; renderShareForm(); break;
@@ -6370,7 +6246,6 @@ document.addEventListener('click', function _handleDataAction(e){
     case 'toggleEyeTarget':        toggleEye(el.dataset.eyeTarget, el); break;
     case 'removeTag':              _tagFormTags.splice(id,1); renderTagForm(); break;
     case 'addTagFromInput':        addTagFromInput(); break;
-    case 'openLicense':            openLicenseSheet(); break;
     case 'setAdvFilter':           _advFilter[el.dataset.key]=el.dataset.val; renderAdvFilterPanel(); updateAdvFilterBadge(); render(); break;
     case 'toggleAdvFilterTag':     toggleAdvFilterTag(el.dataset.tag); break;
   }
