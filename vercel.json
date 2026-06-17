@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/", "destination": "/app", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/sw.js",
