@@ -1,22 +1,28 @@
 REGULAR LICENSE
 
-Copyright (c) 2026 Hesych
+Copyright (c) 2026
 
-Permission is granted to the purchaser of this source code to:
+Permission is granted to the purchaser of this source code, for use by a
+single individual or single organization, to:
 
-1. Use the software for personal or commercial projects
+1. Use the software for personal or internal commercial projects
 2. Modify the software for your own use
-3. Deploy the software on unlimited devices for your own use
+3. Deploy the software on unlimited devices, for use by yourself or your
+   own organization only
 
 The following are PROHIBITED:
 
 1. Reselling, sublicensing, or redistributing the source code in any form
 2. Sharing the source code with anyone who has not purchased a license
-3. Using the source code to create a competing product for sale
+3. Using the source code to build a product or service offered to third
+   parties (including client work, agencies, or hosted services for others)
 4. Removing or modifying this license notice
 
-This software is provided "as is", without warranty of any kind, express or
-implied. The author is not liable for any damages arising from the use of
-this software.
+This license does not include free updates. Updates, if any, will be
+announced separately and may require an additional purchase.
 
-For extended or commercial licenses, contact the author.
+This software is provided "as is", without warranty of any kind, express
+or implied. The author is not liable for any damages arising from the use
+of this software.
+
+For extended, commercial, or multi-client licenses, contact the author.
