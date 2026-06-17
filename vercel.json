@@ -11,7 +11,7 @@
       ]
     },
     {
-      "source": "/(index|app|share|privacy|terms)",
+      "source": "/(app|share)",
       "headers": [
         {
           "key": "Cache-Control",
